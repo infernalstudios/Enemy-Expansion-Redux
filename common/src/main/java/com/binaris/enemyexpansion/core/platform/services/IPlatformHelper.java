@@ -1,4 +1,4 @@
-package com.binaris.enemyexpansion.platform.services;
+package com.binaris.enemyexpansion.core.platform.services;
 
 public interface IPlatformHelper {
 

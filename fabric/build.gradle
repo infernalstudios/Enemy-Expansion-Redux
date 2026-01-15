@@ -30,6 +30,11 @@ dependencies {
     implementation project(":common")
 }
 
+sourceSets.main.resources {
+    srcDir project(":common").file('src/generated/resources').getAbsolutePath()
+    exclude '.cache'
+}
+
 loom {
     if (project(":common").file("src/main/resources/${mod_id}.accesswidener").exists()) {
         accessWidenerPath.set(project(":common").file("src/main/resources/${mod_id}.accesswidener"))

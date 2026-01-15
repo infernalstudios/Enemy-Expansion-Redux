@@ -1,7 +1,7 @@
-package com.binaris.enemyexpansion.platform;
+package com.binaris.enemyexpansion.core.platform;
 
 import com.binaris.enemyexpansion.Constants;
-import com.binaris.enemyexpansion.platform.services.IPlatformHelper;
+import com.binaris.enemyexpansion.core.platform.services.IPlatformHelper;
 
 import java.util.ServiceLoader;
 

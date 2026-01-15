@@ -28,8 +28,10 @@ legacyForge {
             client()
         }
         data {
+            programArguments = ['--mod', mod_id, '--all', '--output',
+                                rootProject.file('common/src/generated/resources/').getAbsolutePath(),
+                                '--existing', rootProject.file('common/src/main/resources/').getAbsolutePath()]
             data()
-            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
         }
         server {
             server()
@@ -59,9 +61,15 @@ repositories {
 dependencies {
     compileOnly project(":common")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
+    compileOnly 'org.jetbrains:annotations:23.0.0'
 
     modImplementation("software.bernie.geckolib:geckolib-forge-${minecraft_version}:${geckolib_version}")
     implementation("com.eliotlash.mclib:mclib:20")
+}
+
+sourceSets.main.resources {
+    srcDir project(":common").file('src/generated/resources').getAbsolutePath()
+    exclude '.cache'
 }
 
 jar {

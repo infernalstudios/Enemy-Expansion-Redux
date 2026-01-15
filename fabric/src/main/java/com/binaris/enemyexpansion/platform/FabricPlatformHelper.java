@@ -1,6 +1,6 @@
 package com.binaris.enemyexpansion.platform;
 
-import com.binaris.enemyexpansion.platform.services.IPlatformHelper;
+import com.binaris.enemyexpansion.core.platform.services.IPlatformHelper;
 import net.fabricmc.loader.api.FabricLoader;
 
 public class FabricPlatformHelper implements IPlatformHelper {

@@ -1,6 +1,6 @@
 package com.binaris.enemyexpansion.platform;
 
-import com.binaris.enemyexpansion.platform.services.IPlatformHelper;
+import com.binaris.enemyexpansion.core.platform.services.IPlatformHelper;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLLoader;
 
