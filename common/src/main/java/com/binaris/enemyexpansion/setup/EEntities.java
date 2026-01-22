@@ -1,6 +1,7 @@
 package com.binaris.enemyexpansion.setup;
 
 import com.binaris.enemyexpansion.EEMod;
+import com.binaris.enemyexpansion.content.entity.HaulEntity;
 import com.binaris.enemyexpansion.content.entity.SprinterEntity;
 import com.binaris.enemyexpansion.core.DeferredObject;
 import com.binaris.enemyexpansion.core.RegisterFunction;
@@ -21,6 +22,8 @@ public final class EEntities {
     static Map<String, DeferredObject<EntityType<? extends Entity>>> entityTypes = new HashMap<>();
 
     public static final DeferredObject<EntityType<SprinterEntity>> SPRINTER = entity(SprinterEntity::new, "sprinter", MobCategory.MONSTER, 0.6F, 1.95F);
+    public static final DeferredObject<EntityType<HaulEntity>> HAUL = entity(HaulEntity::new, "haul", MobCategory.MONSTER, 0.6F, 1.95F);
+
 
     // Registers
     public static void register(RegisterFunction<EntityType<?>> function) {
@@ -30,10 +33,12 @@ public final class EEntities {
 
     public static void registerSpawns() {
         SprinterEntity.spawn();
+        HaulEntity.spawn();
     }
 
     public static void registerAttributes(BiConsumer<EntityType<? extends LivingEntity>, AttributeSupplier> consumer) {
         consumer.accept(SPRINTER.get(), SprinterEntity.createAttributes().build());
+        consumer.accept(HAUL.get(), SprinterEntity.createAttributes().build());
     }
 
     public static Map<String, DeferredObject<EntityType<? extends Entity>>> getEntityTypes() {

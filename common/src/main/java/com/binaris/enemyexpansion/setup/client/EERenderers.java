@@ -1,5 +1,6 @@
 package com.binaris.enemyexpansion.setup.client;
 
+import com.binaris.enemyexpansion.client.renderer.HaulRenderer;
 import com.binaris.enemyexpansion.client.renderer.SprinterRenderer;
 import com.binaris.enemyexpansion.core.DeferredObject;
 import com.binaris.enemyexpansion.setup.EEntities;
@@ -15,8 +16,8 @@ public final class EERenderers {
 
 
     public static void registerRenderers() {
-        // Example registration:
         registerEntityRender(EEntities.SPRINTER, SprinterRenderer::new);
+        registerEntityRender(EEntities.HAUL, HaulRenderer::new);
     }
 
     public static Map<DeferredObject<EntityType<? extends Entity>>, EntityRendererProvider<?>> getRenderers() {

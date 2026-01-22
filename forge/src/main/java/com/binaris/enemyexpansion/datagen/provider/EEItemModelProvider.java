@@ -21,6 +21,7 @@ public class EEItemModelProvider extends ItemModelProvider {
         EEDataGenProcessor.getDefaultItems().forEach((name, item) -> simpleItem(name));
 
         spawnEgg(EEItems.SPRINTER_SPAWN_EGG);
+        spawnEgg(EEItems.HAUL_SPAWN_EGG);
     }
 
     private void spawnEgg(DeferredObject<Item> item) {

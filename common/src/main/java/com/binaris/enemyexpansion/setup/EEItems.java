@@ -17,6 +17,7 @@ public final class EEItems {
     static final Map<String, DeferredObject<? extends Item>> items = new HashMap<>(); // For register function
 
     public static final DeferredObject<Item> SPRINTER_SPAWN_EGG = spawnEgg("sprinter_spawn_egg", EEntities.SPRINTER.get(), -14269861, -9273797);
+    public static final DeferredObject<Item> HAUL_SPAWN_EGG = spawnEgg("haul_spawn_egg", EEntities.SPRINTER.get(), 0x005a4539, 0x00deb289);
 
 
     public static void register(RegisterFunction<Item> function) {

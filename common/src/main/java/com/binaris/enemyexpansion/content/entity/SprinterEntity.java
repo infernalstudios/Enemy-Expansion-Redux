@@ -1,11 +1,13 @@
 package com.binaris.enemyexpansion.content.entity;
 
+import com.binaris.enemyexpansion.EEMod;
 import com.binaris.enemyexpansion.core.mixin.SpawnPlacementsAccessor;
 import com.binaris.enemyexpansion.setup.EEntities;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
@@ -24,20 +26,28 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.core.animation.*;
+import software.bernie.geckolib.core.animation.AnimatableManager;
+import software.bernie.geckolib.core.animation.AnimationController;
 import software.bernie.geckolib.core.animation.AnimationState;
+import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 public class SprinterEntity extends Zombie implements GeoEntity {
-    public static final EntityDataAccessor<String> TEXTURE = SynchedEntityData.defineId(SprinterEntity.class, EntityDataSerializers.STRING);
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+
+    /**
+     * Save the texture type of the Sprinter, this is used to sync and save when the Sprinter has been staggered or not,
+     * instances of this entity could also have variations of these two textures (like the haul).
+     */
+    private static final EntityDataAccessor<String> TEXTURE = SynchedEntityData.defineId(SprinterEntity.class, EntityDataSerializers.STRING);
 
     public SprinterEntity(EntityType<? extends Zombie> entityType, Level level) {
         super(entityType, level);
         this.xpReward = 5;
     }
 
+    @Override
     protected void registerGoals() {
         super.registerGoals();
         this.goalSelector.addGoal(1, new FloatGoal(this));
@@ -47,9 +57,26 @@ public class SprinterEntity extends Zombie implements GeoEntity {
         this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Player.class, false, false));
     }
 
+    @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
-        this.entityData.define(TEXTURE, "sprinter");
+        this.entityData.define(TEXTURE, getNormalTexture());
+    }
+
+    public static void spawn() {
+        SpawnPlacementsAccessor.callRegister(EEntities.SPRINTER.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
+    }
+
+    public static AttributeSupplier.@NotNull Builder createAttributes() {
+        return Zombie.createAttributes()
+                .add(Attributes.MOVEMENT_SPEED, 0.34D).add(Attributes.MAX_HEALTH, 10.0D)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 0.0D).add(Attributes.ATTACK_DAMAGE, 4.0D)
+                .add(Attributes.FOLLOW_RANGE, 16.0D).add(Attributes.ATTACK_KNOCKBACK, 0.5D)
+                .add(Attributes.ARMOR, 0.0D);
+    }
+
+    public void registerControllers(AnimatableManager.ControllerRegistrar data) {
+        data.add(new AnimationController<>(this, "movement", 2, this::movementPredicate));
     }
 
     private PlayState movementPredicate(AnimationState<?> event) {
@@ -110,25 +137,22 @@ public class SprinterEntity extends Zombie implements GeoEntity {
     }
 
     @Override
-    public @NotNull EntityDimensions getDimensions(@NotNull Pose pose) {
-        return super.getDimensions(pose).scale(1.0F);
+    public boolean hurt(DamageSource source, float amount) {
+        if (source.getEntity() instanceof Player player && !player.getAbilities().instabuild && !this.level().isClientSide) {
+            this.setTexture(getStaggeredTexture());
+            EEMod.scheduleTask((ServerLevel) this.level(), 39, () -> {
+                this.setTexture(getNormalTexture());
+            });
+        }
+        return super.hurt(source, amount);
     }
 
-
-    public static void spawn() {
-        SpawnPlacementsAccessor.callRegister(EEntities.SPRINTER.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
+    protected String getNormalTexture() {
+        return "sprinter";
     }
 
-    public static AttributeSupplier.@NotNull Builder createAttributes() {
-        return Zombie.createAttributes()
-                .add(Attributes.MOVEMENT_SPEED, 0.34D).add(Attributes.MAX_HEALTH, 10.0D)
-                .add(Attributes.KNOCKBACK_RESISTANCE, 0.0D).add(Attributes.ATTACK_DAMAGE, 4.0D)
-                .add(Attributes.FOLLOW_RANGE, 16.0D).add(Attributes.ATTACK_KNOCKBACK, 0.5D)
-                .add(Attributes.ARMOR, 0.0D);
-    }
-
-    public void registerControllers(AnimatableManager.ControllerRegistrar data) {
-        data.add(new AnimationController<>(this, "movement", 2, this::movementPredicate));
+    protected String getStaggeredTexture() {
+        return "sprinter_staggered";
     }
 
     @Override
