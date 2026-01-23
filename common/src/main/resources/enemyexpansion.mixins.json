@@ -1,10 +1,12 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "com.binaris.enemyexpansion.core.mixin",
+  "package": "org.infernalstudios.enemyexpansion.core.mixin",
   "refmap": "${mod_id}.refmap.json",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "ServerLevelMixin",
+    "SpawnPlacementsAccessor",
     "ServerLevelMixin",
     "SpawnPlacementsAccessor"
   ],

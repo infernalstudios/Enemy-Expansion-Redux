@@ -1,24 +1,42 @@
-# MultiLoader Template
+# Enemy Expansion
 
-This project provides a Gradle project template that can compile mods for both Forge and Fabric using a common sourceset. This project does not require any third party libraries or dependencies. If you have any questions or want to discuss the project join our [Discord](https://discord.myceliummod.network).
+A mod that aims to make combat encounters in Minecraft more varied and interesting with the introduction of several new
+mobs. The mod is in continual development, consistently being updated by Nekomaster with all manner of creatures to
+freshen up your combat experience.
 
-## Getting Started
+I highly suggest installing In Control! or Bad Mobs to disable or limit the spawning of mobs you don't like. You could
+also use Mobs Properties Randomness if you wanted to weaken or buff certain mobs too!
+Whilst all the mobs can be dealt with using only vanilla mechanics, it'd be far more fun if you also installed other
+mods that implemented more complex battle mechanics too, including Combat Roll and Shield Expansion.
 
-## IntelliJ IDEA
-This guide will show how to import the MultiLoader Template into IntelliJ IDEA. The setup process is roughly equivalent to setting up Forge and Fabric independently and should be very familiar to anyone who has worked with their MDKs.
+## Mobs
 
-1. Clone or download this repository to your computer.
-2. Configure the project by editing the `group`, `mod_name`, `mod_author`, and `mod_id` properties in the `gradle.properties` file. You will also need to change the `rootProject.name`  property in `settings.gradle`, this should match the folder name of your project, or else IDEA may complain.
-3. Open the template's root folder as a new project in IDEA. This is the folder that contains this README file and the gradlew executable.
-4. If your default JVM/JDK is not Java 17 you will encounter an error when opening the project. This error is fixed by going to `File > Settings > Build, Execution, Deployment > Build Tools > Gradle > Gradle JVM`and changing the value to a valid Java 17 JVM. You will also need to set the Project SDK to Java 17. This can be done by going to `File > Project Structure > Project SDK`. Once both have been set open the Gradle tab in IDEA and click the refresh button to reload the project.
-5. Open the Gradle tab in IDEA if it has not already been opened. Navigate to `Your Project > Common > Tasks > vanilla gradle > decompile`. Run this task to decompile Minecraft.
-6. Open your Run/Debug Configurations. Under the Application category there should now be options to run Forge and Fabric projects. Select one of the client options and try to run it.
-7. Assuming you were able to run the game in step 7 your workspace should now be set up.
+### Sprinter
 
-### Eclipse
-While it is possible to use this template in Eclipse it is not recommended. During the development of this template multiple critical bugs and quirks related to Eclipse were found at nearly every level of the required build tools. While we continue to work with these tools to report and resolve issues support for projects like these are not there yet. For now Eclipse is considered unsupported by this project. The development cycle for build tools is notoriously slow so there are no ETAs available.
+A Zombie that runs fast! When attacked, becomes stunned for a moment before resuming its assault.
 
-## Development Guide
-When using this template the majority of your mod is developed in the Common project. The Common project is compiled against the vanilla game and is used to hold code that is shared between the different loader-specific versions of your mod. The Common project has no knowledge or access to ModLoader specific code, apis, or concepts. Code that requires something from a specific loader must be done through the project that is specific to that loader, such as the Forge or Fabric project.
+### Slugger
 
-Loader specific projects such as the Forge and Fabric project are used to load the Common project into the game. These projects also define code that is specific to that loader. Loader specific projects can access all of the code in the Common project. It is important to remember that the Common project can not access code from loader specific projects.
+A Zombie that hits hard! When attacked, briefly gains a speed boost to rush you down with. Back-peddle for your life!
+
+### Meature
+
+Little undead guy doesn't burn in sunlight, and who loves flesh so much, will cannibalise it's fellow Zombie if no
+humans are nearby!
+
+Can be tamed with Rotten Flesh, and will gain more and more health on each kill it earns.
+
+Rarely drops the Meathead, a helmet that gives the player temporary Strength for each kill they earn.
+
+### Vampire
+
+The dreadful bloodsucker of the underground, Vampires are exceedingly dangerous due to their versatility. Upon biting a
+victim, they regenerate some of their health and have inflict both momentary Blindness, and the new Bitten effect, which
+will burn whoever has it under daylight - And if the bite victim is a mob... They're doomed to become a Vampire too,
+just like their aggressor. (They will target Zombies when ground-based, even if a player is nearby, specifically to
+create reinforcements!) They also inflict blindness, before running away. If hurt enough, they may chose to engage in
+flight mode, in which they'll rush you down when they're not floating about idly. In moments of desperation, they may
+turn into the Biter, a smaller, more erratic version of themselves. If they do this and return to normal, they'll have
+regenerated all their health. Take them out whilst they're small to avoid that! If they get burnt, they'll quickly
+combust and explode. Rarely drops the Headbiter, a helmet that gives the player temporary Regeneration for each kill
+they earn.
