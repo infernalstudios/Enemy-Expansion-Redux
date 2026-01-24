@@ -17,10 +17,10 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "org.infernalstudios.enemyexpansion.EEModFabric"
+      "org.infernalstudios.enemyexp.EEModFabric"
     ],
     "client": [
-      "org.infernalstudios.enemyexpansion.client.EEModFabricClient"
+      "org.infernalstudios.enemyexp.client.EEModFabricClient"
     ]
   },
   "mixins": [
