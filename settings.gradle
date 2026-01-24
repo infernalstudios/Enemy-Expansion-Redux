@@ -13,8 +13,6 @@ pluginManagement {
             name = 'Sponge Snapshots'
             url = 'https://repo.spongepowered.org/repository/maven-public/'
         }
-        maven { url 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/' }
-
     }
 }
 
@@ -22,7 +20,7 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
 }
 
-rootProject.name = 'Enemy Expansion'
+rootProject.name = 'Enemy-Expansion-Redux'
 include("common")
 include("fabric")
 include("forge")
