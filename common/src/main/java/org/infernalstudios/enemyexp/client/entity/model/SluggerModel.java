@@ -12,6 +12,6 @@ public class SluggerModel extends DefaultedEntityGeoModel<SluggerEntity> {
 
     @Override
     public ResourceLocation getTextureResource(SluggerEntity animatable) {
-        return EEMod.location("textures/entity/slugger.png");
+        return EEMod.location("textures/entity/" + animatable.getTexture() + ".png");
     }
 }
