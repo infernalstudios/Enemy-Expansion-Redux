@@ -5,6 +5,7 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import org.infernalstudios.enemyexp.client.entity.render.HaulRenderer;
+import org.infernalstudios.enemyexp.client.entity.render.SluggerRenderer;
 import org.infernalstudios.enemyexp.client.entity.render.SprinterRenderer;
 import org.infernalstudios.enemyexp.core.DeferredObject;
 import org.infernalstudios.enemyexp.setup.EEntities;
@@ -21,6 +22,7 @@ public final class EERenderers {
     public static void registerRenderers() {
         registerEntityRender(EEntities.SPRINTER, SprinterRenderer::new);
         registerEntityRender(EEntities.HAUL, HaulRenderer::new);
+        registerEntityRender(EEntities.SLUGGER, SluggerRenderer::new);
     }
 
     public static Map<DeferredObject<EntityType<? extends Entity>>, EntityRendererProvider<?>> getRenderers() {

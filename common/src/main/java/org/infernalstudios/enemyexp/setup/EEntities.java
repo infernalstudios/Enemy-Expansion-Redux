@@ -10,6 +10,7 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.ServerLevelAccessor;
 import org.infernalstudios.enemyexp.EEMod;
 import org.infernalstudios.enemyexp.content.entity.HaulEntity;
+import org.infernalstudios.enemyexp.content.entity.SluggerEntity;
 import org.infernalstudios.enemyexp.content.entity.SprinterEntity;
 import org.infernalstudios.enemyexp.core.DeferredObject;
 import org.infernalstudios.enemyexp.core.RegisterFunction;
@@ -23,7 +24,7 @@ public final class EEntities {
 
     public static final DeferredObject<EntityType<SprinterEntity>> SPRINTER = entity(SprinterEntity::new, "sprinter", MobCategory.MONSTER, 0.6F, 1.95F);
     public static final DeferredObject<EntityType<HaulEntity>> HAUL = entity(HaulEntity::new, "haul", MobCategory.MONSTER, 0.6F, 1.95F);
-
+    public static final DeferredObject<EntityType<SluggerEntity>> SLUGGER = entity(SluggerEntity::new, "slugger", MobCategory.MONSTER, 0.6F, 2.3F);
 
     private EEntities() {
     }
@@ -37,11 +38,13 @@ public final class EEntities {
     public static void registerSpawns() {
         SprinterEntity.spawn();
         HaulEntity.spawn();
+        SluggerEntity.spawn();
     }
 
     public static void registerAttributes(BiConsumer<EntityType<? extends LivingEntity>, AttributeSupplier> consumer) {
         consumer.accept(SPRINTER.get(), SprinterEntity.createAttributes().build());
         consumer.accept(HAUL.get(), SprinterEntity.createAttributes().build());
+        consumer.accept(SLUGGER.get(), SluggerEntity.createAttributes().build());
     }
 
     public static Map<String, DeferredObject<EntityType<? extends Entity>>> getEntityTypes() {
@@ -49,7 +52,7 @@ public final class EEntities {
     }
 
     static <T extends Entity> DeferredObject<EntityType<T>> entity(EntityType.EntityFactory<T> factory, String name, MobCategory category, float width, float height) {
-        return entity(name, EntityType.Builder.<T>of(factory, category).sized(width, height).clientTrackingRange(64).updateInterval(3));
+        return entity(name, EntityType.Builder.of(factory, category).sized(width, height).clientTrackingRange(64).updateInterval(3));
     }
 
     @SuppressWarnings("unchecked")
