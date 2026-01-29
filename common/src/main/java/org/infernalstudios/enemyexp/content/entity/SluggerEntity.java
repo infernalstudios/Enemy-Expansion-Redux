@@ -15,12 +15,10 @@ import net.minecraft.world.entity.monster.ZombifiedPiglin;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.damagesource.DamageSource;
 import org.infernalstudios.enemyexp.core.mixin.RandomLookAroundGoalAccessor;
-import org.infernalstudios.enemyexp.core.mixin.SpawnPlacementsAccessor;
-import org.infernalstudios.enemyexp.setup.EEntities;
+import org.infernalstudios.enemyexp.core.util.AnimUtils;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
@@ -87,10 +85,6 @@ public class SluggerEntity extends Zombie implements GeoEntity {
         this.entityData.define(TEXTURE, NORMAL_TEXTURE);
     }
 
-    public static void spawn() {
-        SpawnPlacementsAccessor.callRegister(EEntities.SLUGGER.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
-    }
-
     private void lockRotationDuringCharge() {
         this.setYRot(this.yRotO);
         this.yHeadRot = this.yRotO;
@@ -134,9 +128,7 @@ public class SluggerEntity extends Zombie implements GeoEntity {
         } else if (chargeTime > 0) {
             return event.setAndContinue(RawAnimation.begin().thenLoop("dash"));
         }
-        return !event.isMoving() && event.getLimbSwingAmount() > -0.15F && event.getLimbSwingAmount() < 0.15F
-                ? event.setAndContinue(RawAnimation.begin().thenLoop("idle"))
-                : event.setAndContinue(RawAnimation.begin().thenLoop("walk"));
+        return AnimUtils.idleWalkAnimation(event, "idle", "walk");
     }
 
     public int getChargeTime() {

@@ -8,12 +8,14 @@ import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.levelgen.Heightmap;
 import org.infernalstudios.enemyexp.EEMod;
 import org.infernalstudios.enemyexp.content.entity.HaulEntity;
 import org.infernalstudios.enemyexp.content.entity.SluggerEntity;
 import org.infernalstudios.enemyexp.content.entity.SprinterEntity;
 import org.infernalstudios.enemyexp.core.DeferredObject;
 import org.infernalstudios.enemyexp.core.RegisterFunction;
+import org.infernalstudios.enemyexp.core.mixin.SpawnPlacementsAccessor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,9 +38,9 @@ public final class EEntities {
     }
 
     public static void registerSpawns() {
-        SprinterEntity.spawn();
-        HaulEntity.spawn();
-        SluggerEntity.spawn();
+        SpawnPlacementsAccessor.callRegister(EEntities.SPRINTER.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
+        SpawnPlacementsAccessor.callRegister(EEntities.HAUL.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
+        SpawnPlacementsAccessor.callRegister(EEntities.SLUGGER.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
     }
 
     public static void registerAttributes(BiConsumer<EntityType<? extends LivingEntity>, AttributeSupplier> consumer) {

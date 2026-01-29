@@ -13,7 +13,6 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobType;
-import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -24,10 +23,8 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.levelgen.Heightmap;
 import org.infernalstudios.enemyexp.EEMod;
-import org.infernalstudios.enemyexp.core.mixin.SpawnPlacementsAccessor;
-import org.infernalstudios.enemyexp.setup.EEntities;
+import org.infernalstudios.enemyexp.core.util.AnimUtils;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
@@ -58,10 +55,6 @@ public class SprinterEntity extends Zombie implements GeoEntity {
     public SprinterEntity(EntityType<? extends Zombie> entityType, Level level) {
         super(entityType, level);
         this.xpReward = 5;
-    }
-
-    public static void spawn() {
-        SpawnPlacementsAccessor.callRegister(EEntities.SPRINTER.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
     }
 
     public static AttributeSupplier.@NotNull Builder createAttributes() {
@@ -114,7 +107,7 @@ public class SprinterEntity extends Zombie implements GeoEntity {
 
     private PlayState movementPredicate(AnimationState<?> event) {
         if (!this.entityData.get(ANIMATION).equals("undefined")) return PlayState.STOP;
-        return !event.isMoving() && event.getLimbSwingAmount() > -0.15F && event.getLimbSwingAmount() < 0.15F ? event.setAndContinue(RawAnimation.begin().thenLoop("idle")) : event.setAndContinue(RawAnimation.begin().thenLoop("sprint"));
+        return AnimUtils.idleWalkAnimation(event, "idle", "sprint");
     }
 
     private PlayState procedurePredicate(AnimationState<?> event) {
