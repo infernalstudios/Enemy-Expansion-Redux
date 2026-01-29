@@ -1,6 +1,8 @@
 {
   "item.enemyexp.sprinter_spawn_egg": "Sprinter Spawn Egg",
   "item.enemyexp.haul_spawn_egg": "Haul Spawn Egg",
+  "item.enemyexp.slugger_spawn_egg": "Slugger Spawn Egg",
   "entity.enemyexp.sprinter": "Sprinter",
-  "entity.enemyexp.haul": "Haul"
+  "entity.enemyexp.haul": "Haul",
+  "entity.enemyexp.slugger": "Slugger"
 }

@@ -18,7 +18,7 @@ public final class EEItems {
 
     public static final DeferredObject<Item> SPRINTER_SPAWN_EGG = spawnEgg("sprinter_spawn_egg", EEntities.SPRINTER.get(), -14269861, -9273797);
     public static final DeferredObject<Item> HAUL_SPAWN_EGG = spawnEgg("haul_spawn_egg", EEntities.HAUL.get(), 0xDEB289, 0x5A4539);
-
+    public static final DeferredObject<Item> SLUGGER_SPAWN_EGG = spawnEgg("slugger_spawn_egg", EEntities.SLUGGER.get(), -12244867, -10910598);
 
     private EEItems() {
         // Prevent instantiation, why would you even want to? :p
@@ -55,7 +55,7 @@ public final class EEItems {
      * @return The deferred object that holds the item instance
      */
     static <T extends Item> DeferredObject<T> item(String name, Supplier<T> itemSupplier, boolean defaultModel, boolean defaultTab) {
-        var ret = new DeferredObject<T>(itemSupplier);
+        var ret = new DeferredObject<>(itemSupplier);
         items.put(name, ret);
         if (defaultTab) EECreativeTabs.addItem(ret);
         if (defaultModel) EEDataGenProcessor.addDefaultItem(name, ret);

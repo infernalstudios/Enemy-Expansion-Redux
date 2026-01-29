@@ -22,6 +22,7 @@ public class EEItemModelProvider extends ItemModelProvider {
 
         spawnEgg(EEItems.SPRINTER_SPAWN_EGG);
         spawnEgg(EEItems.HAUL_SPAWN_EGG);
+        spawnEgg(EEItems.SLUGGER_SPAWN_EGG);
     }
 
     private void spawnEgg(DeferredObject<Item> item) {
@@ -31,9 +32,9 @@ public class EEItemModelProvider extends ItemModelProvider {
 
     private void simpleItem(String name) {
         withExistingParent(name,
-                new ResourceLocation("item/generated")).texture(
+                ResourceLocation.withDefaultNamespace("item/generated")).texture(
                 "layer0",
-                new ResourceLocation(Constants.MOD_ID, "item/" + name)
+                ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "item/" + name)
         );
     }
 }
