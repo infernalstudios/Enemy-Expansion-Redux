@@ -1,21 +1,18 @@
 package org.infernalstudios.enemyexp;
 
-import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 
 @Mod(Constants.MOD_ID)
 public class EEModForge {
-    
-    public EEModForge() {
-        Constants.LOG.info("Hello Forge world!");
+    public EEModForge(FMLJavaModLoadingContext context) {
+        MinecraftForge.EVENT_BUS.register(this);
         EEMod.init();
 
-        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
-
         if (FMLEnvironment.dist.isClient()) {
-            modBus.addListener(EEModForgeClient::clientSetup);
+            context.getModEventBus().addListener(EEModForgeClient::clientSetup);
         }
     }
 }

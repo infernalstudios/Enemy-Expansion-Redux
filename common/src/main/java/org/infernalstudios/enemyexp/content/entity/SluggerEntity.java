@@ -105,7 +105,7 @@ public class SluggerEntity extends Zombie implements GeoEntity {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        if (source.getEntity() instanceof Player player && !isCharging() && !this.level().isClientSide) {
+        if (source.getEntity() instanceof Player player && !player.isCreative() && !isCharging() && !this.level().isClientSide) {
             Vec3 toPlayer = player.position().subtract(this.position()).normalize();
             this.entityData.set(CHARGE_DIR_X, (float) toPlayer.x);
             this.entityData.set(CHARGE_DIR_Z, (float) toPlayer.z);

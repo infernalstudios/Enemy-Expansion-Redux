@@ -2,8 +2,8 @@ package org.infernalstudios.enemyexp.datagen.provider;
 
 import org.infernalstudios.enemyexp.Constants;
 import org.infernalstudios.enemyexp.core.DeferredObject;
+import org.infernalstudios.enemyexp.setup.EECreativeTabs;
 import org.infernalstudios.enemyexp.setup.EEDataGenProcessor;
-import org.infernalstudios.enemyexp.setup.EEItems;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
@@ -20,9 +20,7 @@ public class EEItemModelProvider extends ItemModelProvider {
     protected void registerModels() {
         EEDataGenProcessor.getDefaultItems().forEach((name, item) -> simpleItem(name));
 
-        spawnEgg(EEItems.SPRINTER_SPAWN_EGG);
-        spawnEgg(EEItems.HAUL_SPAWN_EGG);
-        spawnEgg(EEItems.SLUGGER_SPAWN_EGG);
+        EECreativeTabs.getSpawnEggs().forEach(item -> spawnEgg((DeferredObject<Item>) item));
     }
 
     private void spawnEgg(DeferredObject<Item> item) {

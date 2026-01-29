@@ -1,6 +1,9 @@
 package org.infernalstudios.enemyexp;
 
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import org.infernalstudios.enemyexp.core.RegisterFunction;
+import org.infernalstudios.enemyexp.setup.EECreativeTabs;
 import org.infernalstudios.enemyexp.setup.EEItems;
 import org.infernalstudios.enemyexp.setup.EEntities;
 import net.minecraft.core.registries.Registries;
@@ -38,5 +41,11 @@ public class EEForgeEventLoader {
             EEntities.registerAttributes(event::put);
         }
 
+        @SubscribeEvent
+        public static void creativeTabModifications(BuildCreativeModeTabContentsEvent event) {
+            if (event.getTabKey() == CreativeModeTabs.SPAWN_EGGS) {
+                EECreativeTabs.getSpawnEggs().forEach(item -> event.accept(item.get()));
+            }
+        }
     }
 }

@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
+@SuppressWarnings("unused")
 public final class EEItems {
     static final Map<String, DeferredObject<? extends Item>> items = new HashMap<>(); // For register function
 
@@ -40,8 +41,9 @@ public final class EEItems {
      * @return The deferred object that holds the spawn egg item instance
      */
     static DeferredObject<Item> spawnEgg(String name, EntityType<? extends Mob> entityType, int primaryColor, int secondaryColor) {
-        return item(name, () -> new SpawnEggItem(entityType, primaryColor, secondaryColor, new Item.Properties()
-        ), false, true);
+        DeferredObject<Item> ret = item(name, () -> new SpawnEggItem(entityType, primaryColor, secondaryColor, new Item.Properties()), false, false);
+        EECreativeTabs.addSpawnEgg(ret);
+        return ret;
     }
 
     /**
