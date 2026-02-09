@@ -3,7 +3,9 @@ package org.infernalstudios.enemyexp.content.entity;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.world.entity.*;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
@@ -16,7 +18,6 @@ import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.damagesource.DamageSource;
 import org.infernalstudios.enemyexp.core.mixin.RandomLookAroundGoalAccessor;
 import org.infernalstudios.enemyexp.core.util.AnimUtils;
 import org.jetbrains.annotations.NotNull;
@@ -33,24 +34,30 @@ import java.util.EnumSet;
 import java.util.List;
 
 public class SluggerEntity extends Zombie implements GeoEntity {
-    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private static final EntityDataAccessor<Integer> CHARGE_TIME = SynchedEntityData.defineId(SluggerEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Float> CHARGE_DIR_X = SynchedEntityData.defineId(SluggerEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Float> CHARGE_DIR_Z = SynchedEntityData.defineId(SluggerEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<String> TEXTURE = SynchedEntityData.defineId(SluggerEntity.class, EntityDataSerializers.STRING);
-
     private static final String NORMAL_TEXTURE = "slugger";
     private static final String STAGGERED_CHARGE = "slugger_charge";
     private static final String DASHING_TEXTURE = "slugger_dashing";
-
     private static final int CHARGE_DURATION = 17;
     private static final int CHARGE_WINDUP = 10;
     private static final float CHARGE_SPEED = 0.7F;
     private static final float CHARGE_DAMAGE = 6.0F;
     private static final float CHARGE_KNOCKBACK = 1.5F;
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     public SluggerEntity(EntityType<? extends Zombie> entityType, Level level) {
         super(entityType, level);
+    }
+
+    public static AttributeSupplier.@NotNull Builder createAttributes() {
+        return Zombie.createAttributes()
+                .add(Attributes.MOVEMENT_SPEED, 0.2D).add(Attributes.FOLLOW_RANGE, 32.0D)
+                .add(Attributes.ATTACK_DAMAGE, 4.0D).add(Attributes.MAX_HEALTH, 8.0D)
+                .add(Attributes.ARMOR, 16.0D).add(Attributes.KNOCKBACK_RESISTANCE, 3.0D)
+                .add(Attributes.ATTACK_KNOCKBACK, 0.3D);
     }
 
     @Override
@@ -68,14 +75,6 @@ public class SluggerEntity extends Zombie implements GeoEntity {
         this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, IronGolem.class, true));
     }
 
-    public static AttributeSupplier.@NotNull Builder createAttributes() {
-        return Zombie.createAttributes()
-                .add(Attributes.MOVEMENT_SPEED, 0.2D).add(Attributes.FOLLOW_RANGE, 32.0D)
-                .add(Attributes.ATTACK_DAMAGE, 4.0D).add(Attributes.MAX_HEALTH, 8.0D)
-                .add(Attributes.ARMOR, 16.0D).add(Attributes.KNOCKBACK_RESISTANCE, 3.0D)
-                .add(Attributes.ATTACK_KNOCKBACK, 0.3D);
-    }
-
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
@@ -89,6 +88,7 @@ public class SluggerEntity extends Zombie implements GeoEntity {
         this.setYRot(this.yRotO);
         this.yHeadRot = this.yRotO;
         this.yBodyRot = this.yRotO;
+        this.setXRot(this.xRotO);
     }
 
     @Override
@@ -152,12 +152,12 @@ public class SluggerEntity extends Zombie implements GeoEntity {
     }
 
     @Override
-    public void setBaby(boolean childZombie) {
+    public boolean isBaby() {
+        return false;
     }
 
     @Override
-    public boolean isBaby() {
-        return false;
+    public void setBaby(boolean childZombie) {
     }
 
     @Override
