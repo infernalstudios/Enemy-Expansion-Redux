@@ -241,6 +241,7 @@ public class SluggerEntity extends Zombie implements GeoEntity {
         public void stop() {
             this.mob.setTexture(NORMAL_TEXTURE);
             this.mob.setChargeTime(0);
+            this.mob.setDeltaMovement(0, this.mob.getDeltaMovement().y, 0);
         }
     }
 
