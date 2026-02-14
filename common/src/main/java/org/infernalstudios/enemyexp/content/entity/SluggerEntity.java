@@ -41,9 +41,9 @@ public class SluggerEntity extends Zombie implements GeoEntity {
     private static final String NORMAL_TEXTURE = "slugger";
     private static final String STAGGERED_CHARGE = "slugger_charge";
     private static final String DASHING_TEXTURE = "slugger_dashing";
-    private static final int CHARGE_DURATION = 17;
+    private static final int CHARGE_DURATION = 8;
     private static final int CHARGE_WINDUP = 10;
-    private static final float CHARGE_SPEED = 0.7F;
+    private static final float CHARGE_SPEED = 1.0F;
     private static final float CHARGE_DAMAGE = 6.0F;
     private static final float CHARGE_KNOCKBACK = 1.5F;
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
