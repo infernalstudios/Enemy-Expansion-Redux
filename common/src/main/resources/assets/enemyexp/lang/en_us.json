@@ -2,7 +2,9 @@
   "item.enemyexp.sprinter_spawn_egg": "Sprinter Spawn Egg",
   "item.enemyexp.haul_spawn_egg": "Haul Spawn Egg",
   "item.enemyexp.slugger_spawn_egg": "Slugger Spawn Egg",
+  "item.enemyexp.frigid_spawn_egg": "Frigid Spawn Egg",
   "entity.enemyexp.sprinter": "Sprinter",
   "entity.enemyexp.haul": "Haul",
-  "entity.enemyexp.slugger": "Slugger"
+  "entity.enemyexp.slugger": "Slugger",
+  "entity.enemyexp.frigid": "Frigid"
 }

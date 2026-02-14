@@ -15,9 +15,13 @@ public final class AnimUtils {
      * @return The appropriate PlayState for the animation.
      */
     public static PlayState idleWalkAnimation(AnimationState<?> event, String idleAnim, String walkAnim) {
-        return !event.isMoving() && event.getLimbSwingAmount() > -0.15F && event.getLimbSwingAmount() < 0.15F
+        return isNotMoving(event)
                 ? event.setAndContinue(RawAnimation.begin().thenLoop(idleAnim))
                 : event.setAndContinue(RawAnimation.begin().thenLoop(walkAnim));
+    }
+
+    public static boolean isNotMoving(AnimationState<?> event) {
+        return !event.isMoving() && event.getLimbSwingAmount() > -0.15F && event.getLimbSwingAmount() < 0.15F;
     }
 
     private AnimUtils() {
