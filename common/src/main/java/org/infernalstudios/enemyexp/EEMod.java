@@ -2,9 +2,12 @@ package org.infernalstudios.enemyexp;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.infernalstudios.enemyexp.core.ServerLevelRuns;
 
 public class EEMod {
+    public static final Logger logger = LogManager.getLogger();
     public static void init() {
 
     }

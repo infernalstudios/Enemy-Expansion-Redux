@@ -10,10 +10,7 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.infernalstudios.enemyexp.EEMod;
-import org.infernalstudios.enemyexp.content.entity.FrigidEntity;
-import org.infernalstudios.enemyexp.content.entity.HaulEntity;
-import org.infernalstudios.enemyexp.content.entity.SluggerEntity;
-import org.infernalstudios.enemyexp.content.entity.SprinterEntity;
+import org.infernalstudios.enemyexp.content.entity.*;
 import org.infernalstudios.enemyexp.core.DeferredObject;
 import org.infernalstudios.enemyexp.core.RegisterFunction;
 import org.infernalstudios.enemyexp.core.mixin.SpawnPlacementsAccessor;
@@ -29,6 +26,7 @@ public final class EEntities {
     public static final DeferredObject<EntityType<HaulEntity>> HAUL = entity(HaulEntity::new, "haul", MobCategory.MONSTER, 0.6F, 1.95F);
     public static final DeferredObject<EntityType<SluggerEntity>> SLUGGER = entity(SluggerEntity::new, "slugger", MobCategory.MONSTER, 0.6F, 2.3F);
     public static final DeferredObject<EntityType<FrigidEntity>> FRIGID = entity(FrigidEntity::new, "frigid", MobCategory.MONSTER, 0.6F, 1F);
+    public static final DeferredObject<EntityType<MeatureEntity>> MEATURE = entity(MeatureEntity::new, "meature", MobCategory.MONSTER, 0.8F, 0.8F);
 
     private EEntities() {
     }
@@ -44,6 +42,7 @@ public final class EEntities {
         SpawnPlacementsAccessor.callRegister(EEntities.HAUL.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
         SpawnPlacementsAccessor.callRegister(EEntities.SLUGGER.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
         SpawnPlacementsAccessor.callRegister(EEntities.FRIGID.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
+        SpawnPlacementsAccessor.callRegister(EEntities.MEATURE.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
     }
 
     public static void registerAttributes(BiConsumer<EntityType<? extends LivingEntity>, AttributeSupplier> consumer) {
@@ -51,6 +50,7 @@ public final class EEntities {
         consumer.accept(HAUL.get(), SprinterEntity.createAttributes().build());
         consumer.accept(SLUGGER.get(), SluggerEntity.createAttributes().build());
         consumer.accept(FRIGID.get(), FrigidEntity.createAttributes().build());
+        consumer.accept(MEATURE.get(), MeatureEntity.createAttributes().build());
     }
 
     public static Map<String, DeferredObject<EntityType<? extends Entity>>> getEntityTypes() {
