@@ -5,6 +5,8 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -17,6 +19,8 @@ import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import org.infernalstudios.enemyexp.core.util.AnimUtils;
 import org.jetbrains.annotations.NotNull;
@@ -35,6 +39,12 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
     // and a lot of EntityData for each one, we can just have one EntityDataAccessor that holds an Optional<UUID>, if
     // it's empty then it's not tamed, if it has a value then it's tamed and the value is the owner's UUID
     private static final EntityDataAccessor<Optional<UUID>> OWNER_UUID = SynchedEntityData.defineId(MeatureEntity.class, EntityDataSerializers.OPTIONAL_UUID);
+    // When the Meature kills a mob or feed it with rotten flesh, it will gain age, the age will determine the health
+    // modifier, hitbox and size of the Meature
+    private static final EntityDataAccessor<Integer> AGE = SynchedEntityData.defineId(MeatureEntity.class, EntityDataSerializers.INT);
+
+    private static final int MAX_AGE = 10;
+    private static final int HEALTH_PER_AGE = 2;
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
@@ -57,16 +67,61 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
         this.goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 1.0F));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));
-        this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
+        this.targetSelector.addGoal(1, new HurtByTargetGoal(this, Player.class));
 
-        this.targetSelector.addGoal(2, new MeatureTargetGoal<>(this, Player.class));
-        this.targetSelector.addGoal(5, new MeatureTargetGoal<>(this, Zombie.class));
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true, this::isUntamed));
+        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Zombie.class, true));
+    }
+
+    @Override
+    protected @NotNull InteractionResult mobInteract(@NotNull Player player, @NotNull InteractionHand hand) {
+        ItemStack itemstack = player.getItemInHand(hand);
+        if (itemstack.is(Items.ROTTEN_FLESH)) {
+            if (getOwnerUUID() == null) {
+                setOwnerUUID(player.getUUID());
+            }
+            // Grow the meature when fed
+            if (!this.level().isClientSide) {
+                grow();
+                if (!player.getAbilities().instabuild) {
+                    itemstack.shrink(1);
+                }
+            }
+            return InteractionResult.sidedSuccess(this.level().isClientSide);
+        }
+        return super.mobInteract(player, hand);
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (getOwnerUUID() != null && getTarget() != null) {
+            LivingEntity target = getTarget();
+            if (target instanceof Player player && player.getUUID().equals(getOwnerUUID())) {
+                setTarget(null);
+            }
+        }
+    }
+
+    private void grow() {
+        int currentAge = this.entityData.get(AGE);
+        if (currentAge < MAX_AGE) {
+            setAge(currentAge + 1);
+            double newMaxHealth = 10.0D + (currentAge + 1) * HEALTH_PER_AGE;
+            this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(newMaxHealth);
+            this.setHealth((float) newMaxHealth);
+        }
+    }
+
+    private boolean isUntamed(LivingEntity livingEntity) {
+        return getOwnerUUID() == null;
     }
 
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(OWNER_UUID, Optional.empty());
+        this.entityData.define(AGE, 0);
     }
 
     @Override
@@ -127,6 +182,14 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
         this.entityData.set(OWNER_UUID, Optional.ofNullable(uuid));
     }
 
+    public int getAge() {
+        return this.entityData.get(AGE);
+    }
+
+    public void setAge(int age) {
+        this.entityData.set(AGE, age);
+    }
+
     static class MeatureAttackGoal extends MeleeAttackGoal {
         public MeatureAttackGoal(MeatureEntity meature) {
             super(meature, 1.0F, true);
@@ -148,12 +211,6 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
 
         protected double getAttackReachSqr(LivingEntity attackTarget) {
             return 4.0F + attackTarget.getBbWidth();
-        }
-    }
-
-    static class MeatureTargetGoal<T extends LivingEntity> extends NearestAttackableTargetGoal<T> {
-        public MeatureTargetGoal(MeatureEntity spider, Class<T> entityTypeToTarget) {
-            super(spider, entityTypeToTarget, true);
         }
     }
 }
