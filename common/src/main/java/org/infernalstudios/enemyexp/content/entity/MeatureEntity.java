@@ -7,13 +7,13 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
-import net.minecraft.world.entity.ai.goal.ZombieAttackGoal;
+import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
@@ -25,8 +25,6 @@ import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.core.animation.AnimationController;
-import software.bernie.geckolib.core.animation.AnimationState;
-import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.Optional;
@@ -53,11 +51,16 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
-        this.goalSelector.addGoal(2, new ZombieAttackGoal(this, 1.0F, false));
-        this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.0F));
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
-        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Zombie.class, 10, true, false, e -> !(e instanceof MeatureEntity)));
+        this.goalSelector.addGoal(1, new FloatGoal(this));
+        this.goalSelector.addGoal(3, new LeapAtTargetGoal(this, 0.4F));
+        this.goalSelector.addGoal(4, new MeatureAttackGoal(this));
+        this.goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 1.0F));
+        this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));
+        this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
+
+        this.targetSelector.addGoal(2, new MeatureTargetGoal<>(this, Player.class));
+        this.targetSelector.addGoal(5, new MeatureTargetGoal<>(this, Zombie.class));
     }
 
     @Override
@@ -68,11 +71,7 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar data) {
-        data.add(new AnimationController<>(this, "movement", 2, this::movementPredicate));
-    }
-
-    private PlayState movementPredicate(AnimationState<?> event) {
-        return AnimUtils.idleWalkAnimation(event, "idle", "walk");
+        data.add(new AnimationController<>(this, "movement", 2, (event) -> AnimUtils.idleWalkAnimation(event, "idle", "walk")));
     }
 
     @Override
@@ -126,5 +125,35 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
 
     public void setOwnerUUID(@Nullable UUID uuid) {
         this.entityData.set(OWNER_UUID, Optional.ofNullable(uuid));
+    }
+
+    static class MeatureAttackGoal extends MeleeAttackGoal {
+        public MeatureAttackGoal(MeatureEntity meature) {
+            super(meature, 1.0F, true);
+        }
+
+        public boolean canUse() {
+            return super.canUse() && !this.mob.isVehicle();
+        }
+
+        public boolean canContinueToUse() {
+            float f = this.mob.getLightLevelDependentMagicValue();
+            if (f >= 0.5F && this.mob.getRandom().nextInt(100) == 0) {
+                this.mob.setTarget(null);
+                return false;
+            } else {
+                return super.canContinueToUse();
+            }
+        }
+
+        protected double getAttackReachSqr(LivingEntity attackTarget) {
+            return 4.0F + attackTarget.getBbWidth();
+        }
+    }
+
+    static class MeatureTargetGoal<T extends LivingEntity> extends NearestAttackableTargetGoal<T> {
+        public MeatureTargetGoal(MeatureEntity spider, Class<T> entityTypeToTarget) {
+            super(spider, entityTypeToTarget, true);
+        }
     }
 }
