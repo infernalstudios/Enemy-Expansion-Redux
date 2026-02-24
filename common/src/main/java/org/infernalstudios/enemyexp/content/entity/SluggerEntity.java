@@ -18,7 +18,7 @@ import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import org.infernalstudios.enemyexp.core.mixin.RandomLookAroundGoalAccessor;
+import org.infernalstudios.enemyexp.content.entity.goal.ControlRandomLookAroundGoal;
 import org.infernalstudios.enemyexp.core.util.AnimUtils;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoEntity;
@@ -67,7 +67,7 @@ public class SluggerEntity extends Zombie implements GeoEntity {
         this.goalSelector.addGoal(6, new MoveThroughVillageGoal(this, 1.0F, true, 4, this::canBreakDoors));
         this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.0F));
         this.goalSelector.addGoal(8, new SluggerLookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(8, new SluggerRandomLookAroundGoal(this));
+        this.goalSelector.addGoal(9, new ControlRandomLookAroundGoal(this, () -> this.getChargeTime() <= 0));
 
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this).setAlertOthers(ZombifiedPiglin.class));
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
@@ -253,18 +253,6 @@ public class SluggerEntity extends Zombie implements GeoEntity {
         @Override
         public boolean canUse() {
             return ((SluggerEntity) this.mob).getChargeTime() <= 0 && super.canUse();
-        }
-    }
-
-    public static class SluggerRandomLookAroundGoal extends RandomLookAroundGoal {
-        public SluggerRandomLookAroundGoal(SluggerEntity mob) {
-            super(mob);
-        }
-
-        @Override
-        public boolean canUse() {
-            RandomLookAroundGoalAccessor accessor = (RandomLookAroundGoalAccessor) this;
-            return ((SluggerEntity) accessor.getMob()).getChargeTime() <= 0 && super.canUse();
         }
     }
 

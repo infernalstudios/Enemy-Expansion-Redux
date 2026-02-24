@@ -1,5 +1,6 @@
 package org.infernalstudios.enemyexp.content.entity;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -22,6 +23,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import org.infernalstudios.enemyexp.EEMod;
+import org.infernalstudios.enemyexp.content.entity.goal.ControlLookAtPlayerGoal;
+import org.infernalstudios.enemyexp.content.entity.goal.ControlRandomLookAroundGoal;
+import org.infernalstudios.enemyexp.content.entity.goal.ControlWaterAvoidingRandomStrollGoal;
 import org.infernalstudios.enemyexp.core.util.AnimUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,23 +34,35 @@ import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.core.animation.AnimationController;
+import software.bernie.geckolib.core.animation.AnimationState;
+import software.bernie.geckolib.core.animation.RawAnimation;
+import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.Optional;
 import java.util.UUID;
 
 public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
-    // Helping to see if it's tamed, texture change, behavior change, etc. So instead of just having a field for UUID
-    // and a lot of EntityData for each one, we can just have one EntityDataAccessor that holds an Optional<UUID>, if
-    // it's empty then it's not tamed, if it has a value then it's tamed and the value is the owner's UUID
+    /**
+     * Helping to see if it's tamed, texture change, behavior change, etc. So instead of just having a field for UUID
+     * and a lot of EntityData for each one, we can just have one EntityDataAccessor that holds an Optional<UUID>, if
+     * it's empty then it's not tamed, if it has a value then it's tamed and the value is the owner's UUID
+     */
     private static final EntityDataAccessor<Optional<UUID>> OWNER_UUID = SynchedEntityData.defineId(MeatureEntity.class, EntityDataSerializers.OPTIONAL_UUID);
-    // When the Meature kills a mob or feed it with rotten flesh, it will gain age, the age will determine the health
-    // modifier, hitbox and size of the Meature
+    /**
+     * When the Meature kills a mob or feed it with rotten flesh, it will gain age, the age will determine the health
+     * modifier, hitbox and size of the Meature
+     */
     private static final EntityDataAccessor<Integer> AGE = SynchedEntityData.defineId(MeatureEntity.class, EntityDataSerializers.INT);
-
+    /**
+     * (Idle / Walk) don't count in this entity data.
+     * <p>
+     * Used to sync the current animation being played by the Meature, normally it's "undefined" when no animation is
+     * being played, "dance" when the meature is being pet and "leap" when the meature is leaping at a target
+     */
+    private static final EntityDataAccessor<String> ANIMATION = SynchedEntityData.defineId(MeatureEntity.class, EntityDataSerializers.STRING);
     private static final int MAX_AGE = 10;
     private static final int HEALTH_PER_AGE = 2;
-
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     public MeatureEntity(EntityType<? extends Zombie> entityType, Level level) {
@@ -64,13 +81,13 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
         this.goalSelector.addGoal(1, new FloatGoal(this));
         this.goalSelector.addGoal(3, new LeapAtTargetGoal(this, 0.4F));
         this.goalSelector.addGoal(4, new MeatureAttackGoal(this));
-        this.goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 1.0F));
-        this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(5, new ControlWaterAvoidingRandomStrollGoal(this, 1.0F, () -> !isDancing()));
+        this.goalSelector.addGoal(6, new ControlLookAtPlayerGoal(this, Player.class, 8.0F, () -> !isDancing()));
+        this.goalSelector.addGoal(6, new ControlRandomLookAroundGoal(this, () -> !isDancing()));
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this, Player.class));
 
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true, this::isUntamed));
-        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Zombie.class, true));
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true, e -> !isTamed()));
+        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Zombie.class, true, e -> e.getType().equals(EntityType.ZOMBIE) || e.getType().equals(EntityType.ZOMBIE_VILLAGER) || e.getType().equals(EntityType.HUSK)));
     }
 
     @Override
@@ -95,11 +112,17 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
     @Override
     public void tick() {
         super.tick();
+        // Avoid targeting the owner
         if (getOwnerUUID() != null && getTarget() != null) {
             LivingEntity target = getTarget();
             if (target instanceof Player player && player.getUUID().equals(getOwnerUUID())) {
                 setTarget(null);
             }
+        }
+
+        // Stop dancing if the meature has a target, we don't want it to dance while trying to attack something
+        if (isDancing() && getTarget() != null) {
+            setDancing(false);
         }
     }
 
@@ -113,20 +136,48 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
         }
     }
 
-    private boolean isUntamed(LivingEntity livingEntity) {
-        return getOwnerUUID() == null;
-    }
-
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(OWNER_UUID, Optional.empty());
         this.entityData.define(AGE, 0);
+        this.entityData.define(ANIMATION, "undefined");
     }
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar data) {
-        data.add(new AnimationController<>(this, "movement", 2, (event) -> AnimUtils.idleWalkAnimation(event, "idle", "walk")));
+        data.add(new AnimationController<>(this, "movement", 2, this::movementPredicate));
+        data.add(new AnimationController<>(this, "procedure", 2, this::procedurePredicate));
+    }
+
+    private PlayState movementPredicate(AnimationState<?> event) {
+        if (!this.entityData.get(ANIMATION).equals("undefined")) return PlayState.STOP;
+        return AnimUtils.idleWalkAnimation(event, "idle", "walk");
+    }
+
+    private PlayState procedurePredicate(AnimationState<?> event) {
+        String animation = this.entityData.get(ANIMATION);
+        if (!animation.equals("undefined") && event.getController().getAnimationState() == AnimationController.State.STOPPED) {
+            event.getController().setAnimation(RawAnimation.begin().thenPlay(animation));
+            return PlayState.CONTINUE;
+        }
+        return PlayState.STOP;
+    }
+
+    private boolean isTamed() {
+        return getOwnerUUID() != null;
+    }
+
+    public boolean isDancing() {
+        return getAnimation().equals("dance");
+    }
+
+    public void setDancing(boolean dancing) {
+        if (dancing) {
+            setAnimation("dance");
+        } else if (getAnimation().equals("dance")) {
+            setAnimation("undefined");
+        }
     }
 
     @Override
@@ -190,6 +241,14 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
         this.entityData.set(AGE, age);
     }
 
+    public String getAnimation() {
+        return this.entityData.get(ANIMATION);
+    }
+
+    public void setAnimation(String animation) {
+        this.entityData.set(ANIMATION, animation);
+    }
+
     static class MeatureAttackGoal extends MeleeAttackGoal {
         public MeatureAttackGoal(MeatureEntity meature) {
             super(meature, 1.0F, true);
@@ -197,16 +256,6 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
 
         public boolean canUse() {
             return super.canUse() && !this.mob.isVehicle();
-        }
-
-        public boolean canContinueToUse() {
-            float f = this.mob.getLightLevelDependentMagicValue();
-            if (f >= 0.5F && this.mob.getRandom().nextInt(100) == 0) {
-                this.mob.setTarget(null);
-                return false;
-            } else {
-                return super.canContinueToUse();
-            }
         }
 
         protected double getAttackReachSqr(LivingEntity attackTarget) {
