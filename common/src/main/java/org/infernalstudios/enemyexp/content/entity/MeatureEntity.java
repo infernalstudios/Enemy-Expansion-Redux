@@ -1,6 +1,5 @@
 package org.infernalstudios.enemyexp.content.entity;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -23,7 +22,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
-import org.infernalstudios.enemyexp.EEMod;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlLookAtPlayerGoal;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlRandomLookAroundGoal;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlWaterAvoidingRandomStrollGoal;
@@ -103,6 +101,7 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
                 if (!player.getAbilities().instabuild) {
                     itemstack.shrink(1);
                 }
+                triggerAnim("happy", "happy");
             }
             return InteractionResult.sidedSuccess(this.level().isClientSide);
         }
@@ -148,6 +147,8 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
     public void registerControllers(AnimatableManager.ControllerRegistrar data) {
         data.add(new AnimationController<>(this, "movement", 2, this::movementPredicate));
         data.add(new AnimationController<>(this, "procedure", 2, this::procedurePredicate));
+        data.add(new AnimationController<>(this, "happy", state -> PlayState.STOP)
+                .triggerableAnim("happy", RawAnimation.begin().thenPlay("happy")));
     }
 
     private PlayState movementPredicate(AnimationState<?> event) {
