@@ -18,6 +18,7 @@ import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.infernalstudios.enemyexp.content.EEAnimations;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlRandomLookAroundGoal;
 import org.infernalstudios.enemyexp.core.util.AnimUtils;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +27,6 @@ import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache
 import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.core.animation.AnimationController;
 import software.bernie.geckolib.core.animation.AnimationState;
-import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
@@ -124,11 +124,11 @@ public class SluggerEntity extends Zombie implements GeoEntity {
     private PlayState movementPredicate(AnimationState<?> event) {
         int chargeTime = getChargeTime();
         if (chargeTime > CHARGE_DURATION) {
-            return event.setAndContinue(RawAnimation.begin().thenPlayAndHold("charge"));
+            return event.setAndContinue(EEAnimations.CHARGE);
         } else if (chargeTime > 0) {
-            return event.setAndContinue(RawAnimation.begin().thenLoop("dash"));
+            return event.setAndContinue(EEAnimations.DASH);
         }
-        return AnimUtils.idleWalkAnimation(event, "idle", "walk");
+        return AnimUtils.idleWalkAnimation(event);
     }
 
     public int getChargeTime() {

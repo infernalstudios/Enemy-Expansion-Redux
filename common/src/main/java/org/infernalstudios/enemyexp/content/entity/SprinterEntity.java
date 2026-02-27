@@ -24,6 +24,7 @@ import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.infernalstudios.enemyexp.EEMod;
+import org.infernalstudios.enemyexp.content.EEAnimations;
 import org.infernalstudios.enemyexp.core.util.AnimUtils;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoEntity;
@@ -31,7 +32,6 @@ import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache
 import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.core.animation.AnimationController;
 import software.bernie.geckolib.core.animation.AnimationState;
-import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
@@ -107,13 +107,15 @@ public class SprinterEntity extends Zombie implements GeoEntity {
 
     private PlayState movementPredicate(AnimationState<?> event) {
         if (!this.entityData.get(ANIMATION).equals("undefined")) return PlayState.STOP;
-        return AnimUtils.idleWalkAnimation(event, "idle", "sprint");
+        return AnimUtils.idleWalkAnimation(event, EEAnimations.IDLE, EEAnimations.SPRINT);
     }
 
     private PlayState procedurePredicate(AnimationState<?> event) {
         String animation = this.entityData.get(ANIMATION);
         if (!animation.equals("undefined") && event.getController().getAnimationState() == AnimationController.State.STOPPED) {
-            event.getController().setAnimation(RawAnimation.begin().thenPlay(animation));
+            if (animation.equals("staggered_used")) {
+                event.getController().setAnimation(EEAnimations.STAGGERED_USED);
+            }
             return PlayState.CONTINUE;
         }
         return PlayState.STOP;

@@ -9,6 +9,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.level.Level;
+import org.infernalstudios.enemyexp.content.EEAnimations;
 import org.infernalstudios.enemyexp.core.util.AnimUtils;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoEntity;
@@ -16,7 +17,6 @@ import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache
 import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.core.animation.AnimationController;
 import software.bernie.geckolib.core.animation.AnimationState;
-import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
@@ -41,9 +41,9 @@ public class FrigidEntity extends Zombie implements GeoEntity {
 
     private PlayState movementPredicate(AnimationState<?> event) {
         if (!AnimUtils.isNotMoving(event) && this.getTarget() != null) {
-            return event.setAndContinue(RawAnimation.begin().thenLoop("sprint"));
+            return event.setAndContinue(EEAnimations.SPRINT);
         }
-        return AnimUtils.idleWalkAnimation(event, "idle", "walk");
+        return AnimUtils.idleWalkAnimation(event);
     }
 
     @Override

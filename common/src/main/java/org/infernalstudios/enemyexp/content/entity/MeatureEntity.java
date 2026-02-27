@@ -22,6 +22,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import org.infernalstudios.enemyexp.content.EEAnimations;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlLookAtPlayerGoal;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlRandomLookAroundGoal;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlWaterAvoidingRandomStrollGoal;
@@ -33,7 +34,6 @@ import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache
 import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.core.animation.AnimationController;
 import software.bernie.geckolib.core.animation.AnimationState;
-import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
@@ -148,18 +148,18 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
         data.add(new AnimationController<>(this, "movement", 2, this::movementPredicate));
         data.add(new AnimationController<>(this, "procedure", 2, this::procedurePredicate));
         data.add(new AnimationController<>(this, "happy", state -> PlayState.STOP)
-                .triggerableAnim("happy", RawAnimation.begin().thenPlay("happy")));
+                .triggerableAnim("happy", EEAnimations.HAPPY));
     }
 
     private PlayState movementPredicate(AnimationState<?> event) {
         if (!this.entityData.get(ANIMATION).equals("undefined")) return PlayState.STOP;
-        return AnimUtils.idleWalkAnimation(event, "idle", "walk");
+        return AnimUtils.idleWalkAnimation(event);
     }
 
     private PlayState procedurePredicate(AnimationState<?> event) {
         String animation = this.entityData.get(ANIMATION);
         if (!animation.equals("undefined") && event.getController().getAnimationState() == AnimationController.State.STOPPED) {
-            event.getController().setAnimation(RawAnimation.begin().thenPlay(animation));
+            if (animation.equals("dance")) event.getController().setAnimation(EEAnimations.DANCE);
             return PlayState.CONTINUE;
         }
         return PlayState.STOP;
