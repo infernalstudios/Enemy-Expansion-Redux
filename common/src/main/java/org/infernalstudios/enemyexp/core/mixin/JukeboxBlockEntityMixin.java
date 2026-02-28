@@ -35,7 +35,7 @@ public abstract class JukeboxBlockEntityMixin extends BlockEntity {
         double y = this.worldPosition.getY() + 0.5;
         double z = this.worldPosition.getZ() + 0.5;
         List<MeatureEntity> meatures = EE$getEntitiesWithinRadius(16, x, y, z, this.level, MeatureEntity.class);
-        meatures.stream().filter(m -> m.getTarget() == null).forEach(meature -> meature.setDancing(true));
+        meatures.stream().filter(m -> m.getTarget() == null).forEach(MeatureEntity::setDancingRule);
     }
 
     @Inject(method = "stopPlaying", at = @At("HEAD"))
@@ -45,7 +45,7 @@ public abstract class JukeboxBlockEntityMixin extends BlockEntity {
         double y = this.worldPosition.getY() + 0.5;
         double z = this.worldPosition.getZ() + 0.5;
         List<MeatureEntity> meatures = EE$getEntitiesWithinRadius(16, x, y, z, this.level, MeatureEntity.class);
-        meatures.stream().filter(MeatureEntity::isDancing).forEach(meature -> meature.setDancing(false));
+        meatures.stream().filter(MeatureEntity::isDancing).forEach(MeatureEntity::setIdleRule);
     }
 
     @Unique

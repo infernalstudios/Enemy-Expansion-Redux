@@ -19,6 +19,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.infernalstudios.enemyexp.content.EEAnimations;
+import org.infernalstudios.enemyexp.content.entity.goal.ControlAttackGoal;
+import org.infernalstudios.enemyexp.content.entity.goal.ControlLookAtPlayerGoal;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlRandomLookAroundGoal;
 import org.infernalstudios.enemyexp.core.util.AnimUtils;
 import org.jetbrains.annotations.NotNull;
@@ -63,10 +65,10 @@ public class SluggerEntity extends Zombie implements GeoEntity {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new SluggerChargeGoal(this));
-        this.goalSelector.addGoal(2, new SluggerAttackGoal(this, 1.0D, false));
+        this.goalSelector.addGoal(2, new ControlAttackGoal(this, 1.0D, false, () -> this.getChargeTime() <= 0));
         this.goalSelector.addGoal(6, new MoveThroughVillageGoal(this, 1.0F, true, 4, this::canBreakDoors));
         this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.0F));
-        this.goalSelector.addGoal(8, new SluggerLookAtPlayerGoal(this, Player.class, 8.0F));
+        this.goalSelector.addGoal(8, new ControlLookAtPlayerGoal(this, Player.class, 8.0F, () -> this.getChargeTime() <= 0));
         this.goalSelector.addGoal(9, new ControlRandomLookAroundGoal(this, () -> this.getChargeTime() <= 0));
 
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this).setAlertOthers(ZombifiedPiglin.class));
@@ -242,28 +244,6 @@ public class SluggerEntity extends Zombie implements GeoEntity {
             this.mob.setTexture(NORMAL_TEXTURE);
             this.mob.setChargeTime(0);
             this.mob.setDeltaMovement(0, this.mob.getDeltaMovement().y, 0);
-        }
-    }
-
-    public static class SluggerLookAtPlayerGoal extends LookAtPlayerGoal {
-        public SluggerLookAtPlayerGoal(SluggerEntity mob, Class<? extends LivingEntity> lookAtType, float lookDistance) {
-            super(mob, lookAtType, lookDistance);
-        }
-
-        @Override
-        public boolean canUse() {
-            return ((SluggerEntity) this.mob).getChargeTime() <= 0 && super.canUse();
-        }
-    }
-
-    public static class SluggerAttackGoal extends MeleeAttackGoal {
-        public SluggerAttackGoal(SluggerEntity mob, double speedModifier, boolean followingTargetEvenIfNotSeen) {
-            super(mob, speedModifier, followingTargetEvenIfNotSeen);
-        }
-
-        @Override
-        public boolean canUse() {
-            return ((SluggerEntity) this.mob).getChargeTime() <= 0 && super.canUse();
         }
     }
 }

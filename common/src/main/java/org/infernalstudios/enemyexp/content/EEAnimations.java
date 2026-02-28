@@ -1,5 +1,6 @@
 package org.infernalstudios.enemyexp.content;
 
+import software.bernie.geckolib.core.animation.Animation;
 import software.bernie.geckolib.core.animation.RawAnimation;
 
 public final class EEAnimations {
@@ -9,7 +10,7 @@ public final class EEAnimations {
     public static final RawAnimation SPRINT = RawAnimation.begin().thenLoop("sprint");
 
     // Sprinter
-    public static final RawAnimation STAGGERED_USED = RawAnimation.begin().thenPlay("staggered_used");
+    public static final RawAnimation STAGGERED_USED = RawAnimation.begin().then("staggered_used", Animation.LoopType.PLAY_ONCE);
 
     // Slugger
     public static final RawAnimation CHARGE = RawAnimation.begin().thenPlayAndHold("charge");

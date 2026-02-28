@@ -55,10 +55,10 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
     /**
      * (Idle / Walk) don't count in this entity data.
      * <p>
-     * Used to sync the current animation being played by the Meature, normally it's "undefined" when no animation is
-     * being played, "dance" when the meature is being pet and "leap" when the meature is leaping at a target
+     * This only has 3 states, "undefined", "dance" and "happy", the first one is the default state, the second one is
+     * when the meature is dancing and the third one is when the meature is happy (when fed by the player).
      */
-    private static final EntityDataAccessor<String> ANIMATION = SynchedEntityData.defineId(MeatureEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> MOVE_RULE = SynchedEntityData.defineId(MeatureEntity.class, EntityDataSerializers.STRING);
     private static final int MAX_AGE = 10;
     private static final int HEALTH_PER_AGE = 2;
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -79,9 +79,9 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
         this.goalSelector.addGoal(1, new FloatGoal(this));
         this.goalSelector.addGoal(3, new LeapAtTargetGoal(this, 0.4F));
         this.goalSelector.addGoal(4, new MeatureAttackGoal(this));
-        this.goalSelector.addGoal(5, new ControlWaterAvoidingRandomStrollGoal(this, 1.0F, () -> !isDancing()));
-        this.goalSelector.addGoal(6, new ControlLookAtPlayerGoal(this, Player.class, 8.0F, () -> !isDancing()));
-        this.goalSelector.addGoal(6, new ControlRandomLookAroundGoal(this, () -> !isDancing()));
+        this.goalSelector.addGoal(5, new ControlWaterAvoidingRandomStrollGoal(this, 1.0F, () -> !isDancing() && !isHappy()));
+        this.goalSelector.addGoal(6, new ControlLookAtPlayerGoal(this, Player.class, 8.0F, () -> !isDancing() && !isHappy()));
+        this.goalSelector.addGoal(6, new ControlRandomLookAroundGoal(this, () -> !isDancing() && !isHappy()));
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this, Player.class));
 
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true, e -> !isTamed()));
@@ -121,7 +121,7 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
 
         // Stop dancing if the meature has a target, we don't want it to dance while trying to attack something
         if (isDancing() && getTarget() != null) {
-            setDancing(false);
+            setIdleRule();
         }
     }
 
@@ -140,26 +140,24 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
         super.defineSynchedData();
         this.entityData.define(OWNER_UUID, Optional.empty());
         this.entityData.define(AGE, 0);
-        this.entityData.define(ANIMATION, "undefined");
+        this.entityData.define(MOVE_RULE, "undefined");
     }
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar data) {
         data.add(new AnimationController<>(this, "movement", 2, this::movementPredicate));
-        data.add(new AnimationController<>(this, "procedure", 2, this::procedurePredicate));
-        data.add(new AnimationController<>(this, "happy", state -> PlayState.STOP)
-                .triggerableAnim("happy", EEAnimations.HAPPY));
+        data.add(new AnimationController<>(this, "procedure", 2, this::dancePredicate));
+        data.add(new AnimationController<>(this, "happy", state -> PlayState.STOP).triggerableAnim("happy", EEAnimations.HAPPY));
     }
 
     private PlayState movementPredicate(AnimationState<?> event) {
-        if (!this.entityData.get(ANIMATION).equals("undefined")) return PlayState.STOP;
+        if (!this.entityData.get(MOVE_RULE).equals("undefined")) return PlayState.STOP;
         return AnimUtils.idleWalkAnimation(event);
     }
 
-    private PlayState procedurePredicate(AnimationState<?> event) {
-        String animation = this.entityData.get(ANIMATION);
-        if (!animation.equals("undefined") && event.getController().getAnimationState() == AnimationController.State.STOPPED) {
-            if (animation.equals("dance")) event.getController().setAnimation(EEAnimations.DANCE);
+    private PlayState dancePredicate(AnimationState<?> event) {
+        if (isDancing()) {
+            event.getController().setAnimation(EEAnimations.DANCE);
             return PlayState.CONTINUE;
         }
         return PlayState.STOP;
@@ -167,18 +165,6 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
 
     private boolean isTamed() {
         return getOwnerUUID() != null;
-    }
-
-    public boolean isDancing() {
-        return getAnimation().equals("dance");
-    }
-
-    public void setDancing(boolean dancing) {
-        if (dancing) {
-            setAnimation("dance");
-        } else if (getAnimation().equals("dance")) {
-            setAnimation("undefined");
-        }
     }
 
     @Override
@@ -242,12 +228,36 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
         this.entityData.set(AGE, age);
     }
 
-    public String getAnimation() {
-        return this.entityData.get(ANIMATION);
+    public String getMoveRule() {
+        return this.entityData.get(MOVE_RULE);
     }
 
-    public void setAnimation(String animation) {
-        this.entityData.set(ANIMATION, animation);
+    public void setMoveRule(String animation) {
+        this.entityData.set(MOVE_RULE, animation);
+    }
+
+    public void setDancingRule() {
+        setMoveRule("dance");
+    }
+
+    public void setIdleRule() {
+        setMoveRule("undefined");
+    }
+
+    public void setHappyRule() {
+        setMoveRule("happy");
+    }
+
+    public boolean isHappy() {
+        return getMoveRule().equals("happy");
+    }
+
+    public boolean isIdle() {
+        return getMoveRule().equals("undefined");
+    }
+
+    public boolean isDancing() {
+        return getMoveRule().equals("dance");
     }
 
     static class MeatureAttackGoal extends MeleeAttackGoal {

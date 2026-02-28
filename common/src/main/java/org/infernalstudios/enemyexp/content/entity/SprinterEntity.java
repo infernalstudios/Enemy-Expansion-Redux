@@ -44,12 +44,6 @@ public class SprinterEntity extends Zombie implements GeoEntity {
      */
     private static final EntityDataAccessor<String> TEXTURE = SynchedEntityData.defineId(SprinterEntity.class, EntityDataSerializers.STRING);
 
-    /**
-     * Save the current animation being played by the Sprinter, used for syncing between server and client, normally
-     * we use "undefined" when no animation is being played and "staggered" when the stagger animation is being played.
-     */
-    private static final EntityDataAccessor<String> ANIMATION = SynchedEntityData.defineId(SprinterEntity.class, EntityDataSerializers.STRING);
-
     private static final int STAGGER_RECOVERY_TICKS = 44;
 
     public SprinterEntity(EntityType<? extends Zombie> entityType, Level level) {
@@ -79,19 +73,17 @@ public class SprinterEntity extends Zombie implements GeoEntity {
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(TEXTURE, getNormalTexture());
-        this.entityData.define(ANIMATION, "undefined");
     }
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
         if (source.getEntity() instanceof Player player && !player.getAbilities().instabuild && !this.level().isClientSide) {
             this.setTexture(getStaggeredTexture());
-            this.setAnimation("staggered_used");
+            triggerAnim("staggered_used", "staggered_used");
             this.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, STAGGER_RECOVERY_TICKS, 1, false, false, false));
             EEMod.scheduleTask((ServerLevel) this.level(), STAGGER_RECOVERY_TICKS, () -> {
                 if (this.isDeadOrDying()) return;
                 this.setTexture(getNormalTexture());
-                this.setAnimation("undefined");
                 ServerLevel serverLevel = (ServerLevel) this.level();
                 serverLevel.sendParticles(ParticleTypes.ANGRY_VILLAGER, this.getX(), this.getY() + 1, this.getZ(), 5, 1.0D, 1.0D, 1.0D, 0.6);
             });
@@ -102,23 +94,12 @@ public class SprinterEntity extends Zombie implements GeoEntity {
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar data) {
         data.add(new AnimationController<>(this, "movement", 2, this::movementPredicate));
-        data.add(new AnimationController<>(this, "procedure", 2, this::procedurePredicate));
+        data.add(new AnimationController<>(this, "staggered_used", state -> PlayState.STOP)
+                .triggerableAnim("staggered_used", EEAnimations.STAGGERED_USED));
     }
 
     private PlayState movementPredicate(AnimationState<?> event) {
-        if (!this.entityData.get(ANIMATION).equals("undefined")) return PlayState.STOP;
         return AnimUtils.idleWalkAnimation(event, EEAnimations.IDLE, EEAnimations.SPRINT);
-    }
-
-    private PlayState procedurePredicate(AnimationState<?> event) {
-        String animation = this.entityData.get(ANIMATION);
-        if (!animation.equals("undefined") && event.getController().getAnimationState() == AnimationController.State.STOPPED) {
-            if (animation.equals("staggered_used")) {
-                event.getController().setAnimation(EEAnimations.STAGGERED_USED);
-            }
-            return PlayState.CONTINUE;
-        }
-        return PlayState.STOP;
     }
 
     @Override
@@ -152,14 +133,6 @@ public class SprinterEntity extends Zombie implements GeoEntity {
 
     public void setTexture(String texture) {
         this.entityData.set(TEXTURE, texture);
-    }
-
-    public String getAnimation() {
-        return this.entityData.get(ANIMATION);
-    }
-
-    public void setAnimation(String animation) {
-        this.entityData.set(ANIMATION, animation);
     }
 
     @Override
