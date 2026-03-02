@@ -19,6 +19,7 @@ public final class EEAnimations {
     // Meature
     public static final RawAnimation DANCE = RawAnimation.begin().thenLoop("dance");
     public static final RawAnimation HAPPY = RawAnimation.begin().thenPlay("happy");
+    public static final RawAnimation LEAP = RawAnimation.begin().thenPlay("leap");
 
     private EEAnimations() {
     }
