@@ -1,0 +1,90 @@
+{
+	"format_version": "1.12.0",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.vampire",
+				"texture_width": 64,
+				"texture_height": 64,
+				"visible_bounds_width": 4,
+				"visible_bounds_height": 4.5,
+				"visible_bounds_offset": [0, 1.75, 0]
+			},
+			"bones": [
+				{
+					"name": "all",
+					"pivot": [0, 0, 0]
+				},
+				{
+					"name": "head",
+					"parent": "all",
+					"pivot": [0, 5.08655, 0.4078],
+					"rotation": [5, 0, 0],
+					"cubes": [
+						{"origin": [-4, 5.08655, -3.5922], "size": [8, 8, 8], "inflate": 0.02, "uv": [0, 0]}
+					]
+				},
+				{
+					"name": "headlegsboth",
+					"parent": "head",
+					"pivot": [0, 5.08655, 0.4078],
+					"rotation": [22.5, 0, 0]
+				},
+				{
+					"name": "headlegright",
+					"parent": "headlegsboth",
+					"pivot": [-2, 5.08655, 0.4078],
+					"cubes": [
+						{"origin": [-3, 0.08655, -0.5922], "size": [2, 5, 1], "inflate": 0.02, "uv": [28, 1], "mirror": true}
+					]
+				},
+				{
+					"name": "headlegleft",
+					"parent": "headlegsboth",
+					"pivot": [2, 5.08655, 0.4078],
+					"cubes": [
+						{"origin": [1, 0.08655, -0.5922], "size": [2, 5, 1], "inflate": 0.02, "uv": [28, 1]}
+					]
+				},
+				{
+					"name": "armorhead",
+					"parent": "head",
+					"pivot": [0, 5.08655, 0.4078],
+					"cubes": [
+						{"origin": [-4, 5.08655, -3.5922], "size": [8, 8, 8], "inflate": 0.02, "uv": [32, 0]}
+					]
+				},
+				{
+					"name": "rightear",
+					"parent": "head",
+					"pivot": [-4, 9.08655, -1.5922],
+					"rotation": [22.5, 0, 0]
+				},
+				{
+					"name": "rightwing",
+					"parent": "rightear",
+					"pivot": [-4, 9.08655, -1.5922],
+					"rotation": [0, -32.5, 0],
+					"cubes": [
+						{"origin": [-4, 1.08655, -1.5922], "size": [1, 13, 19], "uv": [0, 32], "mirror": true}
+					]
+				},
+				{
+					"name": "leftear",
+					"parent": "head",
+					"pivot": [4, 9.08655, -1.5922],
+					"rotation": [22.5, 0, 0]
+				},
+				{
+					"name": "leftwing",
+					"parent": "leftear",
+					"pivot": [4, 9.08655, -1.5922],
+					"rotation": [0, 32.5, 0],
+					"cubes": [
+						{"origin": [3, 1.08655, -1.5922], "size": [1, 13, 19], "uv": [0, 32]}
+					]
+				}
+			]
+		}
+	]
+}

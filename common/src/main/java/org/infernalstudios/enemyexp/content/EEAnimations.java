@@ -21,6 +21,15 @@ public final class EEAnimations {
     public static final RawAnimation HAPPY = RawAnimation.begin().thenPlay("happy");
     public static final RawAnimation LEAP = RawAnimation.begin().thenPlay("leap");
 
+    // Vampire
+    public static final RawAnimation VAMPIRE_ALERT = RawAnimation.begin().thenPlay("alert");
+    public static final RawAnimation VAMPIRE_CHASE = RawAnimation.begin().thenLoop("chase");
+    public static final RawAnimation VAMPIRE_DODGE = RawAnimation.begin().thenPlay("dodge_back");
+    public static final RawAnimation VAMPIRE_FLYING = RawAnimation.begin().thenLoop("flying");
+
+    // Biter
+    public static final RawAnimation BITER_FORWARD = RawAnimation.begin().thenLoop("forward");
+
     private EEAnimations() {
     }
 }

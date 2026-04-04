@@ -23,6 +23,8 @@ public final class EERenderers {
         registerEntityRender(EEntities.SLUGGER, SluggerRenderer::new);
         registerEntityRender(EEntities.FRIGID, FrigidRenderer::new);
         registerEntityRender(EEntities.MEATURE, MeatureRenderer::new);
+        registerEntityRender(EEntities.VAMPIRE, VampireRenderer::new);
+        registerEntityRender(EEntities.BITER, BiterRenderer::new);
     }
 
     public static Map<DeferredObject<EntityType<? extends Entity>>, EntityRendererProvider<?>> getRenderers() {

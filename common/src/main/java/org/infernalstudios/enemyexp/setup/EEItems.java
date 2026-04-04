@@ -22,6 +22,8 @@ public final class EEItems {
     public static final DeferredObject<Item> SLUGGER_SPAWN_EGG = spawnEgg("slugger_spawn_egg", EEntities.SLUGGER.get(), -12244867, -10910598);
     public static final DeferredObject<Item> FRIGID_SPAWN_EGG = spawnEgg("frigid_spawn_egg", EEntities.FRIGID.get(), 0x639392, 0x004e5a);
     public static final DeferredObject<Item> MEATURE_SPAWN_EGG = spawnEgg("meature_spawn_egg", EEntities.MEATURE.get(), -9359573, -6730933);
+    public static final DeferredObject<Item> VAMPIRE_SPAWN_EGG = spawnEgg("vampire_spawn_egg", EEntities.VAMPIRE.get(), 0x1A1A1A, 0x8A0303);
+    public static final DeferredObject<Item> BITER_SPAWN_EGG = spawnEgg("biter_spawn_egg", EEntities.BITER.get(), 0x8A0303, 0x1A1A1A);
 
     private EEItems() {
         // Prevent instantiation, why would you even want to? :p

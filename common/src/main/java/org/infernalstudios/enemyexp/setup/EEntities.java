@@ -27,6 +27,8 @@ public final class EEntities {
     public static final DeferredObject<EntityType<SluggerEntity>> SLUGGER = entity(SluggerEntity::new, "slugger", MobCategory.MONSTER, 0.6F, 2.3F);
     public static final DeferredObject<EntityType<FrigidEntity>> FRIGID = entity(FrigidEntity::new, "frigid", MobCategory.MONSTER, 0.6F, 1F);
     public static final DeferredObject<EntityType<MeatureEntity>> MEATURE = entity(MeatureEntity::new, "meature", MobCategory.MONSTER, 0.8F, 0.8F);
+    public static final DeferredObject<EntityType<VampireEntity>> VAMPIRE = entity(VampireEntity::new, "vampire", MobCategory.MONSTER, 0.6F, 1.95F);
+    public static final DeferredObject<EntityType<BiterEntity>> BITER = entity(BiterEntity::new, "biter", MobCategory.MONSTER, 0.4F, 0.4F);
 
     private EEntities() {
     }
@@ -43,6 +45,8 @@ public final class EEntities {
         SpawnPlacementsAccessor.callRegister(EEntities.SLUGGER.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
         SpawnPlacementsAccessor.callRegister(EEntities.FRIGID.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
         SpawnPlacementsAccessor.callRegister(EEntities.MEATURE.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
+        SpawnPlacementsAccessor.callRegister(EEntities.VAMPIRE.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
+        SpawnPlacementsAccessor.callRegister(EEntities.BITER.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
     }
 
     public static void registerAttributes(BiConsumer<EntityType<? extends LivingEntity>, AttributeSupplier> consumer) {
@@ -51,6 +55,8 @@ public final class EEntities {
         consumer.accept(SLUGGER.get(), SluggerEntity.createAttributes().build());
         consumer.accept(FRIGID.get(), FrigidEntity.createAttributes().build());
         consumer.accept(MEATURE.get(), MeatureEntity.createAttributes().build());
+        consumer.accept(VAMPIRE.get(), VampireEntity.createAttributes().build());
+        consumer.accept(BITER.get(), BiterEntity.createAttributes().build());
     }
 
     public static Map<String, DeferredObject<EntityType<? extends Entity>>> getEntityTypes() {
