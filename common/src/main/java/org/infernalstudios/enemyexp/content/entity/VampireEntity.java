@@ -45,14 +45,13 @@ public class VampireEntity extends Monster implements GeoEntity {
     private static final EntityDataAccessor<Boolean> AERIAL = SynchedEntityData.defineId(VampireEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> ANGRY = SynchedEntityData.defineId(VampireEntity.class, EntityDataSerializers.BOOLEAN);
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
-    private int ticksSinceInteraction = 0;
-    private int dodgeTicks = 0;
-    private int alertTicks = 0;
-
     private final PathNavigation groundNavigation;
     private final PathNavigation flyingNavigation;
     private final MoveControl groundMoveControl;
     private final MoveControl flyingMoveControl;
+    private int ticksSinceInteraction = 0;
+    private int dodgeTicks = 0;
+    private int alertTicks = 0;
 
     public VampireEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -169,10 +168,26 @@ public class VampireEntity extends Monster implements GeoEntity {
                 setAerial(!isAerial());
             }
 
-            Vec3 knockbackDir = this.position().subtract(source.getEntity().position()).normalize();
-            this.setDeltaMovement(knockbackDir.x * 1.2, 0.4, knockbackDir.z * 1.2);
-            dodgeTicks = 10;
-            triggerAnim("dodge", "dodge_back");
+            if (this.getHealth() > 0) {
+                if (isAerial()) {
+                    triggerAnim("hurt", "hurt_flying");
+                } else {
+                    float rand = this.random.nextFloat();
+                    if (rand < 0.33f) {
+                        Vec3 knockbackDir = this.position().subtract(source.getEntity().position()).normalize();
+                        this.setDeltaMovement(knockbackDir.x * 1.2, 0.4, knockbackDir.z * 1.2);
+                        dodgeTicks = 10;
+                        triggerAnim("dodge", "dodge_back");
+                    } else if (rand < 0.66f) {
+                        Vec3 knockbackDir = source.getEntity().position().subtract(this.position()).normalize();
+                        this.setDeltaMovement(knockbackDir.x * 1.2, 0.4, knockbackDir.z * 1.2);
+                        dodgeTicks = 10;
+                        triggerAnim("dodge", "dodge_forward");
+                    } else {
+                        triggerAnim("hurt", "hurt_standing");
+                    }
+                }
+            }
         }
         return hurt;
     }
@@ -193,12 +208,17 @@ public class VampireEntity extends Monster implements GeoEntity {
     @Override
     public void die(@NotNull DamageSource cause) {
         super.die(cause);
-        if (!this.level().isClientSide && this.onGround() && this.random.nextBoolean()) {
-            BiterEntity biter = EEntities.BITER.get().create(this.level());
-            if (biter != null) {
-                biter.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
-                this.level().addFreshEntity(biter);
-                triggerAnim("death", "biter_spawn");
+        if (!this.level().isClientSide) {
+            if (this.onGround() && this.random.nextBoolean()) {
+                BiterEntity biter = EEntities.BITER.get().create(this.level());
+                if (biter != null) {
+                    biter.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
+                    this.level().addFreshEntity(biter);
+                    triggerAnim("death", "biter_spawn");
+                }
+            } else {
+                if (isAerial()) triggerAnim("death", "die_air");
+                else triggerAnim("death", "die_ground");
             }
         }
     }
@@ -230,10 +250,52 @@ public class VampireEntity extends Monster implements GeoEntity {
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar data) {
         data.add(new AnimationController<>(this, "movement", 2, this::movementPredicate));
+        data.add(new AnimationController<>(this, "wings", 2, this::wingsPredicate));
+        data.add(new AnimationController<>(this, "falling", 2, this::fallingPredicate));
+
         data.add(new AnimationController<>(this, "alert", 0, state -> PlayState.STOP)
                 .triggerableAnim("alert", EEAnimations.VAMPIRE_ALERT));
+
         data.add(new AnimationController<>(this, "dodge", 0, state -> PlayState.STOP)
-                .triggerableAnim("dodge_back", EEAnimations.VAMPIRE_DODGE));
+                .triggerableAnim("dodge_back", EEAnimations.VAMPIRE_DODGE_BACK)
+                .triggerableAnim("dodge_forward", EEAnimations.VAMPIRE_DODGE_FORWARD));
+
+        data.add(new AnimationController<>(this, "hurt", 0, state -> PlayState.STOP)
+                .triggerableAnim("hurt_standing", EEAnimations.VAMPIRE_HURT_STANDING)
+                .triggerableAnim("hurt_flying", EEAnimations.VAMPIRE_HURT_FLYING));
+
+        data.add(new AnimationController<>(this, "death", 0, state -> PlayState.STOP)
+                .triggerableAnim("die_ground", EEAnimations.VAMPIRE_DIE_GROUND)
+                .triggerableAnim("die_air", EEAnimations.VAMPIRE_DIE_AIR)
+                .triggerableAnim("biter_spawn", EEAnimations.VAMPIRE_BITER_SPAWN));
+
+        data.add(new AnimationController<>(this, "landing", 0, state -> PlayState.STOP)
+                .triggerableAnim("falling_end", EEAnimations.VAMPIRE_FALLING_END));
+    }
+
+    private PlayState movementPredicate(AnimationState<?> event) {
+        if (isAerial()) {
+            if (event.isMoving()) return event.setAndContinue(EEAnimations.VAMPIRE_FLYING);
+            return event.setAndContinue(EEAnimations.VAMPIRE_HOVER);
+        }
+        if (isAwake() && event.isMoving()) {
+            return event.setAndContinue(EEAnimations.VAMPIRE_CHASE);
+        }
+        return AnimUtils.idleWalkAnimation(event, EEAnimations.IDLE, EEAnimations.WALK);
+    }
+
+    private PlayState wingsPredicate(AnimationState<?> event) {
+        if (isAerial()) {
+            return event.setAndContinue(EEAnimations.VAMPIRE_WINGS_FLAPPING);
+        }
+        return PlayState.STOP;
+    }
+
+    private PlayState fallingPredicate(AnimationState<?> event) {
+        if (!isAerial() && !this.onGround() && this.getDeltaMovement().y < -0.4) {
+            return event.setAndContinue(EEAnimations.VAMPIRE_FALLING);
+        }
+        return PlayState.STOP;
     }
 
     @Override
@@ -258,17 +320,12 @@ public class VampireEntity extends Monster implements GeoEntity {
     @Override
     public boolean causeFallDamage(float fallDistance, float multiplier, @NotNull DamageSource source) {
         if (isAerial()) return false;
-        return super.causeFallDamage(fallDistance, multiplier, source);
-    }
 
-    private PlayState movementPredicate(AnimationState<?> event) {
-        if (isAerial()) {
-            return event.setAndContinue(EEAnimations.VAMPIRE_FLYING);
+        if (!this.level().isClientSide && fallDistance > 1.0F) {
+            triggerAnim("landing", "falling_end");
         }
-        if (isAwake() && event.isMoving()) {
-            return event.setAndContinue(EEAnimations.VAMPIRE_CHASE);
-        }
-        return AnimUtils.idleWalkAnimation(event, EEAnimations.IDLE, EEAnimations.WALK);
+
+        return super.causeFallDamage(fallDistance, multiplier, source);
     }
 
     @Override

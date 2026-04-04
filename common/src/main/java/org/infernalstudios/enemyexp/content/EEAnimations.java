@@ -24,11 +24,28 @@ public final class EEAnimations {
     // Vampire
     public static final RawAnimation VAMPIRE_ALERT = RawAnimation.begin().then("alert", Animation.LoopType.PLAY_ONCE);
     public static final RawAnimation VAMPIRE_CHASE = RawAnimation.begin().thenLoop("chase");
-    public static final RawAnimation VAMPIRE_DODGE = RawAnimation.begin().then("dodge_back", Animation.LoopType.PLAY_ONCE);
     public static final RawAnimation VAMPIRE_FLYING = RawAnimation.begin().thenLoop("flying");
+    public static final RawAnimation VAMPIRE_HOVER = RawAnimation.begin().thenLoop("hover");
+    public static final RawAnimation VAMPIRE_WINGS_FLAPPING = RawAnimation.begin().thenLoop("wings_flapping");
+
+    public static final RawAnimation VAMPIRE_DODGE_BACK = RawAnimation.begin().then("dodge_back", Animation.LoopType.PLAY_ONCE);
+    public static final RawAnimation VAMPIRE_DODGE_FORWARD = RawAnimation.begin().then("dodge_forward", Animation.LoopType.PLAY_ONCE);
+
+    public static final RawAnimation VAMPIRE_HURT_STANDING = RawAnimation.begin().then("hurt_standing", Animation.LoopType.PLAY_ONCE);
+    public static final RawAnimation VAMPIRE_HURT_FLYING = RawAnimation.begin().then("hurt_flying", Animation.LoopType.PLAY_ONCE);
+
+    public static final RawAnimation VAMPIRE_FALLING = RawAnimation.begin().then("falling_start", Animation.LoopType.PLAY_ONCE).thenLoop("falling_loop");
+    public static final RawAnimation VAMPIRE_FALLING_END = RawAnimation.begin().then("falling_end", Animation.LoopType.PLAY_ONCE);
+
+    public static final RawAnimation VAMPIRE_DIE_GROUND = RawAnimation.begin().then("die_ground", Animation.LoopType.PLAY_ONCE);
+    public static final RawAnimation VAMPIRE_DIE_AIR = RawAnimation.begin().then("die_air", Animation.LoopType.PLAY_ONCE);
+    public static final RawAnimation VAMPIRE_BITER_SPAWN = RawAnimation.begin().then("biter_spawn", Animation.LoopType.PLAY_ONCE);
 
     // Biter
     public static final RawAnimation BITER_FORWARD = RawAnimation.begin().thenLoop("forward");
+    public static final RawAnimation BITER_WOBBLING = RawAnimation.begin().thenLoop("wobbling");
+    public static final RawAnimation BITER_WINGS_FLAPPING = RawAnimation.begin().thenLoop("wings_flapping");
+    public static final RawAnimation BITER_DIE = RawAnimation.begin().then("die", Animation.LoopType.PLAY_ONCE);
 
     private EEAnimations() {
     }

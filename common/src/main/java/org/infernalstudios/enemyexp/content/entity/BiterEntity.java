@@ -1,5 +1,6 @@
 package org.infernalstudios.enemyexp.content.entity;
 
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -60,13 +61,26 @@ public class BiterEntity extends Monster implements GeoEntity {
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar data) {
         data.add(new AnimationController<>(this, "movement", 2, this::movementPredicate));
+
+        data.add(new AnimationController<>(this, "wings", 2, state -> state.setAndContinue(EEAnimations.BITER_WINGS_FLAPPING)));
+
+        data.add(new AnimationController<>(this, "death", 0, state -> PlayState.STOP)
+                .triggerableAnim("die", EEAnimations.BITER_DIE));
     }
 
     private PlayState movementPredicate(AnimationState<?> event) {
         if (event.isMoving()) {
             return event.setAndContinue(EEAnimations.BITER_FORWARD);
         }
-        return event.setAndContinue(EEAnimations.IDLE);
+        return event.setAndContinue(EEAnimations.BITER_WOBBLING);
+    }
+
+    @Override
+    public void die(@NotNull DamageSource cause) {
+        super.die(cause);
+        if (!this.level().isClientSide) {
+            triggerAnim("death", "die");
+        }
     }
 
     @Override
