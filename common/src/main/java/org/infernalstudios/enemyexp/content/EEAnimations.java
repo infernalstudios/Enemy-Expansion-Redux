@@ -22,9 +22,9 @@ public final class EEAnimations {
     public static final RawAnimation LEAP = RawAnimation.begin().thenPlay("leap");
 
     // Vampire
-    public static final RawAnimation VAMPIRE_ALERT = RawAnimation.begin().thenPlay("alert");
+    public static final RawAnimation VAMPIRE_ALERT = RawAnimation.begin().then("alert", Animation.LoopType.PLAY_ONCE);
     public static final RawAnimation VAMPIRE_CHASE = RawAnimation.begin().thenLoop("chase");
-    public static final RawAnimation VAMPIRE_DODGE = RawAnimation.begin().thenPlay("dodge_back");
+    public static final RawAnimation VAMPIRE_DODGE = RawAnimation.begin().then("dodge_back", Animation.LoopType.PLAY_ONCE);
     public static final RawAnimation VAMPIRE_FLYING = RawAnimation.begin().thenLoop("flying");
 
     // Biter

@@ -12,9 +12,14 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.control.FlyingMoveControl;
+import net.minecraft.world.entity.ai.control.MoveControl;
 import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
+import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.world.entity.monster.AbstractIllager;
 import net.minecraft.world.entity.monster.Monster;
@@ -44,8 +49,20 @@ public class VampireEntity extends Monster implements GeoEntity {
     private int dodgeTicks = 0;
     private int alertTicks = 0;
 
+    private final PathNavigation groundNavigation;
+    private final PathNavigation flyingNavigation;
+    private final MoveControl groundMoveControl;
+    private final MoveControl flyingMoveControl;
+
     public VampireEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
+        this.groundNavigation = new GroundPathNavigation(this, level);
+        this.flyingNavigation = new FlyingPathNavigation(this, level);
+        this.groundMoveControl = new MoveControl(this);
+        this.flyingMoveControl = new FlyingMoveControl(this, 20, true);
+
+        this.navigation = this.groundNavigation;
+        this.moveControl = this.groundMoveControl;
     }
 
     public static AttributeSupplier.@NotNull Builder createAttributes() {
@@ -53,6 +70,7 @@ public class VampireEntity extends Monster implements GeoEntity {
                 .add(Attributes.MAX_HEALTH, 20.0D)
                 .add(Attributes.ATTACK_DAMAGE, 4.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.25D)
+                .add(Attributes.FLYING_SPEED, 0.6D)
                 .add(Attributes.FOLLOW_RANGE, 64.0D);
     }
 
@@ -68,7 +86,21 @@ public class VampireEntity extends Monster implements GeoEntity {
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new AvoidEntityGoal<>(this, IronGolem.class, 8.0F, 1.2D, 1.5D));
         this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.2D, false));
-        this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 0.8D));
+
+        this.goalSelector.addGoal(3, new WaterAvoidingRandomFlyingGoal(this, 1.0D) {
+            @Override
+            public boolean canUse() {
+                return VampireEntity.this.isAerial() && super.canUse();
+            }
+        });
+
+        this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 0.8D) {
+            @Override
+            public boolean canUse() {
+                return !VampireEntity.this.isAerial() && super.canUse();
+            }
+        });
+
         this.goalSelector.addGoal(4, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(5, new RandomLookAroundGoal(this));
 
@@ -113,6 +145,12 @@ public class VampireEntity extends Monster implements GeoEntity {
             }
 
             if (dodgeTicks > 0) dodgeTicks--;
+
+            if (!isAerial() && this.getTarget() != null && this.tickCount % 20 == 0) {
+                if (this.getTarget().getY() > this.getY() + 2.0D && this.getNavigation().isDone()) {
+                    setAerial(true);
+                }
+            }
         }
     }
 
@@ -196,6 +234,31 @@ public class VampireEntity extends Monster implements GeoEntity {
                 .triggerableAnim("alert", EEAnimations.VAMPIRE_ALERT));
         data.add(new AnimationController<>(this, "dodge", 0, state -> PlayState.STOP)
                 .triggerableAnim("dodge_back", EEAnimations.VAMPIRE_DODGE));
+    }
+
+    @Override
+    public void onSyncedDataUpdated(@NotNull EntityDataAccessor<?> key) {
+        super.onSyncedDataUpdated(key);
+        if (AERIAL.equals(key)) {
+            boolean aerial = isAerial();
+            this.setNoGravity(aerial);
+
+            if (!this.level().isClientSide) {
+                if (aerial) {
+                    this.navigation = this.flyingNavigation;
+                    this.moveControl = this.flyingMoveControl;
+                } else {
+                    this.navigation = this.groundNavigation;
+                    this.moveControl = this.groundMoveControl;
+                }
+            }
+        }
+    }
+
+    @Override
+    public boolean causeFallDamage(float fallDistance, float multiplier, @NotNull DamageSource source) {
+        if (isAerial()) return false;
+        return super.causeFallDamage(fallDistance, multiplier, source);
     }
 
     private PlayState movementPredicate(AnimationState<?> event) {
