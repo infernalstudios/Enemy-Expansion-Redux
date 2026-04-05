@@ -27,7 +27,7 @@ public final class EEntities {
     public static final DeferredObject<EntityType<SluggerEntity>> SLUGGER = entity(SluggerEntity::new, "slugger", MobCategory.MONSTER, 0.6F, 2.3F);
     public static final DeferredObject<EntityType<FrigidEntity>> FRIGID = entity(FrigidEntity::new, "frigid", MobCategory.MONSTER, 0.6F, 1F);
     public static final DeferredObject<EntityType<MeatureEntity>> MEATURE = entity(MeatureEntity::new, "meature", MobCategory.MONSTER, 0.8F, 0.8F);
-    public static final DeferredObject<EntityType<VampireEntity>> VAMPIRE = entity(VampireEntity::new, "vampire", MobCategory.MONSTER, 0.6F, 1.95F);
+    public static final DeferredObject<EntityType<VampireEntity>> VAMPIRE = entity(VampireEntity::new, "vampire", MobCategory.MONSTER, 1.2F, 1.95F);
     public static final DeferredObject<EntityType<BiterEntity>> BITER = entity(BiterEntity::new, "biter", MobCategory.MONSTER, 0.4F, 0.4F);
 
     private EEntities() {
