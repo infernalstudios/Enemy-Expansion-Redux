@@ -1,9 +1,11 @@
 package org.infernalstudios.enemyexp.content.entity;
 
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -54,6 +56,7 @@ public class VampireEntity extends Monster implements GeoEntity {
     private int ticksSinceInteraction = 0;
     private int dodgeTicks = 0;
     private int alertTicks = 0;
+    private boolean spawningBiter = false;
 
     public VampireEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -253,15 +256,38 @@ public class VampireEntity extends Monster implements GeoEntity {
         super.die(cause);
         if (!this.level().isClientSide) {
             if (!isAerial() && this.random.nextBoolean()) {
-                BiterEntity biter = EEntities.BITER.get().create(this.level());
-                if (biter != null) {
-                    biter.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
-                    this.level().addFreshEntity(biter);
-                    triggerAnim("death", "biter_spawn");
-                }
+                this.spawningBiter = true;
+                triggerAnim("death", "biter_spawn");
             } else {
                 if (isAerial()) triggerAnim("death", "die_air");
                 else triggerAnim("death", "die_ground");
+            }
+        }
+    }
+
+    @Override
+    protected void tickDeath() {
+        this.deathTime++;
+        int maxDeathTime = this.spawningBiter ? 30 : 20;
+
+        if (this.deathTime >= maxDeathTime && !this.level().isClientSide) {
+            this.remove(Entity.RemovalReason.KILLED);
+
+            if (this.level() instanceof ServerLevel serverLevel) {
+                serverLevel.sendParticles(ParticleTypes.POOF, this.getX(), this.getY() + 0.8, this.getZ(), 10, 0.3, 0.5, 0.3, 0.05);
+            }
+
+            if (this.spawningBiter) {
+                BiterEntity biter = EEntities.BITER.get().create(this.level());
+                if (biter != null) {
+                    double yaw = Math.toRadians(this.getYRot());
+                    double spawnX = this.getX() - Math.sin(yaw);
+                    double spawnY = this.getY() + 0.1;
+                    double spawnZ = this.getZ() + Math.cos(yaw);
+
+                    biter.moveTo(spawnX, spawnY, spawnZ, this.getYRot(), this.getXRot());
+                    this.level().addFreshEntity(biter);
+                }
             }
         }
     }
