@@ -162,9 +162,9 @@ public class VampireEntity extends Monster implements GeoEntity {
 
             if (!isAerial() && this.getTarget() != null && this.tickCount % 20 == 0) {
                 boolean targetHigher = this.getTarget().getY() > this.getY() + 2.0D;
-                boolean pathBlocked = this.getNavigation().isDone() && this.distanceToSqr(this.getTarget()) > 4.0D;
+                boolean noPath = !this.getNavigation().isInProgress() || this.getNavigation().isStuck();
 
-                if (targetHigher || pathBlocked) {
+                if (targetHigher && noPath) {
                     setAerial(true);
                 }
             }
@@ -195,25 +195,8 @@ public class VampireEntity extends Monster implements GeoEntity {
             return super.hurt(source, amount);
         }
 
-        if (this.getHealth() > 0 && !isAerial() && source.getEntity() instanceof LivingEntity) {
-            float rand = this.random.nextFloat();
-
-            if (rand < 0.20f) {
-                Vec3 dashDir = source.getEntity().position().subtract(this.position()).normalize();
-                this.setDeltaMovement(dashDir.x * 1.5, 0.3, dashDir.z * 1.5);
-                dodgeTicks = 15;
-                triggerAnim("dodge", "dodge_forward");
-                return false;
-            } else if (rand < 0.40f) {
-                Vec3 retreatDir = this.position().subtract(source.getEntity().position()).normalize();
-                this.setDeltaMovement(retreatDir.x * 1.5, 0.3, retreatDir.z * 1.5);
-                dodgeTicks = 15;
-                triggerAnim("dodge", "dodge_back");
-                return false;
-            }
-        }
-
         boolean hurt = super.hurt(source, amount);
+
         if (hurt) {
             if (!isAwake()) {
                 setAwake(true);
@@ -221,6 +204,22 @@ public class VampireEntity extends Monster implements GeoEntity {
                 setAngry(true);
             }
             ticksSinceInteraction = 0;
+
+            if (this.getHealth() > 0 && !isAerial() && source.getEntity() instanceof LivingEntity) {
+                float rand = this.random.nextFloat();
+
+                if (rand < 0.20f) {
+                    Vec3 dashDir = source.getEntity().position().subtract(this.position()).normalize();
+                    this.setDeltaMovement(dashDir.x * 1.5, 0.3, dashDir.z * 1.5);
+                    dodgeTicks = 15;
+                    triggerAnim("dodge", "dodge_forward");
+                } else if (rand < 0.40f) {
+                    Vec3 retreatDir = this.position().subtract(source.getEntity().position()).normalize();
+                    this.setDeltaMovement(retreatDir.x * 1.5, 0.3, retreatDir.z * 1.5);
+                    dodgeTicks = 15;
+                    triggerAnim("dodge", "dodge_back");
+                }
+            }
 
             if (this.random.nextFloat() < 0.25f) {
                 setAerial(!isAerial());
@@ -242,6 +241,7 @@ public class VampireEntity extends Monster implements GeoEntity {
             this.heal(6.0F);
 
             if (livingTarget instanceof AbstractVillager || livingTarget instanceof AbstractIllager) {
+                // TODO: conversion effect
                 livingTarget.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 1));
             }
         }
@@ -252,7 +252,7 @@ public class VampireEntity extends Monster implements GeoEntity {
     public void die(@NotNull DamageSource cause) {
         super.die(cause);
         if (!this.level().isClientSide) {
-            if (this.onGround() && this.random.nextBoolean()) {
+            if (!isAerial() && this.random.nextBoolean()) {
                 BiterEntity biter = EEntities.BITER.get().create(this.level());
                 if (biter != null) {
                     biter.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
