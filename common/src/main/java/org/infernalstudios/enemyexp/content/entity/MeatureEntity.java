@@ -76,8 +76,7 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new FloatGoal(this));
-        this.goalSelector.addGoal(2, new MeatureLeapAttackGoal(this));
-        this.goalSelector.addGoal(3, new LeapAtTargetGoal(this, 0.4F));
+//        this.goalSelector.addGoal(2, new MeatureLeapAttackGoal(this));
         this.goalSelector.addGoal(4, new MeatureAttackGoal(this));
         this.goalSelector.addGoal(5, new ControlWaterAvoidingRandomStrollGoal(this, 1.0F, () -> !isInSpecial()));
         this.goalSelector.addGoal(6, new ControlLookAtPlayerGoal(this, Player.class, 8.0F, () -> !isDancing() || !isHappy()));
@@ -149,7 +148,7 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
     public void registerControllers(AnimatableManager.ControllerRegistrar data) {
         data.add(new AnimationController<>(this, "movement", 2, this::movementPredicate));
         data.add(new AnimationController<>(this, "procedure", 2, this::dancePredicate));
-        data.add(new AnimationController<>(this, "leap", 0, this::leapPredicate));
+        data.add(new AnimationController<>(this, "leap", state -> PlayState.STOP).triggerableAnim("leap", EEAnimations.LEAP));
         data.add(new AnimationController<>(this, "happy", state -> PlayState.STOP).triggerableAnim("happy", EEAnimations.HAPPY));
     }
 
@@ -168,7 +167,10 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
     }
 
     private PlayState leapPredicate(AnimationState<?> event) {
-        // TODO leap predicate
+        if (isLeaping()) {
+            event.getController().setAnimation(EEAnimations.LEAP);
+            return PlayState.CONTINUE;
+        }
         return PlayState.STOP;
     }
 

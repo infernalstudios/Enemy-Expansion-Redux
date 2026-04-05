@@ -77,6 +77,8 @@ public class MeatureLeapAttackGoal extends Goal {
 
         // Tell the entity (and its renderer) that a leap is happening.
         meature.setLeapRule();
+        // Trigger the leap animation
+        meature.triggerAnim("leap", "leap");
     }
 
     @Override
