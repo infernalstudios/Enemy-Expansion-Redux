@@ -6,11 +6,13 @@
   "item.enemyexp.meature_spawn_egg": "Meature Spawn Egg",
   "item.enemyexp.vampire_spawn_egg": "Vampire Spawn Egg",
   "item.enemyexp.biter_spawn_egg": "Biter Spawn Egg",
+  "item.enemyexp.vampear": "Vampear",
   "entity.enemyexp.sprinter": "Sprinter",
   "entity.enemyexp.haul": "Haul",
   "entity.enemyexp.slugger": "Slugger",
   "entity.enemyexp.frigid": "Frigid",
   "entity.enemyexp.meature": "Meature",
   "entity.enemyexp.vampire": "Vampire",
-  "entity.enemyexp.biter": "Biter"
+  "entity.enemyexp.biter": "Biter",
+  "effect.enemyexp.bitten": "Bitten"
 }
