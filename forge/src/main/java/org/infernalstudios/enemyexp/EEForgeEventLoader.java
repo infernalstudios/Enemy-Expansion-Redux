@@ -1,16 +1,17 @@
 package org.infernalstudios.enemyexp;
 
+import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
-import org.infernalstudios.enemyexp.core.RegisterFunction;
-import org.infernalstudios.enemyexp.setup.EECreativeTabs;
-import org.infernalstudios.enemyexp.setup.EEItems;
-import org.infernalstudios.enemyexp.setup.EEntities;
-import net.minecraft.core.registries.Registries;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.RegisterEvent;
+import org.infernalstudios.enemyexp.core.RegisterFunction;
+import org.infernalstudios.enemyexp.setup.EECreativeTabs;
+import org.infernalstudios.enemyexp.setup.EEItems;
+import org.infernalstudios.enemyexp.setup.EEMobEffects;
+import org.infernalstudios.enemyexp.setup.EEntities;
 
 import java.util.function.Consumer;
 
@@ -29,6 +30,8 @@ public class EEForgeEventLoader {
                 register(event, EEntities::register);
             else if (event.getRegistryKey() == Registries.ITEM)
                 register(event, EEItems::register);
+            else if (event.getRegistryKey() == Registries.MOB_EFFECT)
+                register(event, EEMobEffects::register);
 
         }
 

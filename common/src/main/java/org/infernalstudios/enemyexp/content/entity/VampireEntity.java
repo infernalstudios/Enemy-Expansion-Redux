@@ -34,6 +34,7 @@ import net.minecraft.world.phys.Vec3;
 import org.infernalstudios.enemyexp.content.EEAnimations;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlAttackGoal;
 import org.infernalstudios.enemyexp.core.util.AnimUtils;
+import org.infernalstudios.enemyexp.setup.EEMobEffects;
 import org.infernalstudios.enemyexp.setup.EEntities;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoEntity;
@@ -114,6 +115,7 @@ public class VampireEntity extends Monster implements GeoEntity {
     }
 
     private boolean canTarget(LivingEntity target) {
+        if (target.hasEffect(EEMobEffects.BITTEN.get())) return false;
         double range = isAwake() ? 64.0D : 8.0D;
         return this.distanceToSqr(target) <= range * range;
     }
@@ -244,8 +246,7 @@ public class VampireEntity extends Monster implements GeoEntity {
             this.heal(6.0F);
 
             if (livingTarget instanceof AbstractVillager || livingTarget instanceof AbstractIllager) {
-                // TODO: conversion effect
-                livingTarget.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 1));
+                livingTarget.addEffect(new MobEffectInstance(EEMobEffects.BITTEN.get(), 600, 0));
             }
         }
         return hurt;

@@ -8,6 +8,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.CreativeModeTabs;
 import org.infernalstudios.enemyexp.setup.EECreativeTabs;
 import org.infernalstudios.enemyexp.setup.EEItems;
+import org.infernalstudios.enemyexp.setup.EEMobEffects;
 import org.infernalstudios.enemyexp.setup.EEntities;
 
 public class EEModFabric implements ModInitializer {
@@ -19,6 +20,7 @@ public class EEModFabric implements ModInitializer {
         EEntities.register(Registry::register);
         EEntities.registerAttributes(FabricDefaultAttributeRegistry::register);
         EEItems.register(Registry::register);
+        EEMobEffects.register(Registry::register);
 
         ItemGroupEvents.MODIFY_ENTRIES_ALL.register((itemGroup, entries) -> {
             if (itemGroup == BuiltInRegistries.CREATIVE_MODE_TAB.get(CreativeModeTabs.SPAWN_EGGS)) {

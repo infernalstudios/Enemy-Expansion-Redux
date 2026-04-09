@@ -1,8 +1,7 @@
 package org.infernalstudios.enemyexp.mixin;
 
-import org.infernalstudios.enemyexp.Constants;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.TitleScreen;
+import org.infernalstudios.enemyexp.Constants;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -14,7 +13,6 @@ public class MixinTitleScreen {
     @Inject(at = @At("HEAD"), method = "init()V")
     private void init(CallbackInfo info) {
 
-        Constants.LOG.info("This line is printed by an example mod mixin from Forge!");
-        Constants.LOG.info("MC Version: {}", Minecraft.getInstance().getVersionType());
+        Constants.LOG.info("Hello from " + Constants.MOD_NAME + "!");
     }
 }
