@@ -26,7 +26,6 @@ import org.infernalstudios.enemyexp.content.EEAnimations;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlLookAtPlayerGoal;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlRandomLookAroundGoal;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlWaterAvoidingRandomStrollGoal;
-import org.infernalstudios.enemyexp.content.entity.goal.MeatureLeapAttackGoal;
 import org.infernalstudios.enemyexp.core.util.AnimUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -42,22 +41,17 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
-    /**
-     * Owner UUID, saved for handling when the meature is tamed. Empty means untamed.
-     */
+    /** Owner UUID, saved for handling when the meature is tamed. Empty means untamed. */
     private static final EntityDataAccessor<Optional<UUID>> OWNER_UUID = SynchedEntityData.defineId(MeatureEntity.class, EntityDataSerializers.OPTIONAL_UUID);
 
-    /**
-     * Age tracks growth, feeding rotten flesh increases it up to MAX_AGE, scaling max health and hitbox size.
-     */
+    /** Age tracks growth, feeding rotten flesh increases it up to MAX_AGE, scaling max health and hitbox size. */
     private static final EntityDataAccessor<Integer> AGE = SynchedEntityData.defineId(MeatureEntity.class, EntityDataSerializers.INT);
 
-    /**
-     * Controls which animation/behavior override is active. Values: "undefined" (idle/walk), "dance", "happy", "leap"
-     */
+    /** Controls which animation/behavior override is active. Values: "undefined" (idle/walk), "dance", "happy" */
     private static final EntityDataAccessor<String> MOVE_RULE = SynchedEntityData.defineId(MeatureEntity.class, EntityDataSerializers.STRING);
 
     private static final int MAX_AGE = 10;
+
     private static final int HEALTH_PER_AGE = 2;
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -76,7 +70,6 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new FloatGoal(this));
-//        this.goalSelector.addGoal(2, new MeatureLeapAttackGoal(this));
         this.goalSelector.addGoal(4, new MeatureAttackGoal(this));
         this.goalSelector.addGoal(5, new ControlWaterAvoidingRandomStrollGoal(this, 1.0F, () -> !isInSpecial()));
         this.goalSelector.addGoal(6, new ControlLookAtPlayerGoal(this, Player.class, 8.0F, () -> !isDancing() || !isHappy()));
@@ -118,12 +111,6 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
         if (isDancing() && getTarget() != null) {
             setIdleRule();
         }
-
-        // Cancel leaping state when back on the ground and the leap goal is no longer active.
-        // (The goal itself calls setIdleRule on stop(), but this is a safety net for edge cases.)
-        if (isLeaping() && onGround()) {
-            setIdleRule();
-        }
     }
 
     private void grow() {
@@ -148,7 +135,6 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
     public void registerControllers(AnimatableManager.ControllerRegistrar data) {
         data.add(new AnimationController<>(this, "movement", 2, this::movementPredicate));
         data.add(new AnimationController<>(this, "procedure", 2, this::dancePredicate));
-        data.add(new AnimationController<>(this, "leap", state -> PlayState.STOP).triggerableAnim("leap", EEAnimations.LEAP));
         data.add(new AnimationController<>(this, "happy", state -> PlayState.STOP).triggerableAnim("happy", EEAnimations.HAPPY));
     }
 
@@ -161,14 +147,6 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
     private PlayState dancePredicate(AnimationState<?> event) {
         if (isDancing()) {
             event.getController().setAnimation(EEAnimations.DANCE);
-            return PlayState.CONTINUE;
-        }
-        return PlayState.STOP;
-    }
-
-    private PlayState leapPredicate(AnimationState<?> event) {
-        if (isLeaping()) {
-            event.getController().setAnimation(EEAnimations.LEAP);
             return PlayState.CONTINUE;
         }
         return PlayState.STOP;
@@ -255,16 +233,8 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
         setMoveRule("undefined");
     }
 
-    public void setHappyRule() {
-        setMoveRule("happy");
-    }
-
-    public void setLeapRule() {
-        setMoveRule("leap");
-    }
-
     public boolean isInSpecial() {
-        return isHappy() || isDancing() || isLeaping();
+        return isHappy() || isDancing();
     }
 
     public boolean isHappy() {
@@ -279,12 +249,6 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
         return getMoveRule().equals("dance");
     }
 
-    public boolean isLeaping() {
-        return getMoveRule().equals("leap");
-    }
-
-    // ── Inner goals ───────────────────────────────────────────────────────────
-
     static class MeatureAttackGoal extends MeleeAttackGoal {
         public MeatureAttackGoal(MeatureEntity meature) {
             super(meature, 1.0F, true);
@@ -293,9 +257,7 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
         @Override
         public boolean canUse() {
             // Don't melee-attack while a leap is in progress.
-            return super.canUse()
-                    && !this.mob.isVehicle()
-                    && !((MeatureEntity) this.mob).isLeaping();
+            return super.canUse() && !this.mob.isVehicle();
         }
 
         @Override
