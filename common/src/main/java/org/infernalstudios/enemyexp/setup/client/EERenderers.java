@@ -25,6 +25,7 @@ public final class EERenderers {
         registerEntityRender(EEntities.MEATURE, MeatureRenderer::new);
         registerEntityRender(EEntities.VAMPIRE, VampireRenderer::new);
         registerEntityRender(EEntities.BITER, BiterRenderer::new);
+        registerEntityRender(EEntities.EQUESTRIAN, EquestrianRenderer::new);
     }
 
     public static Map<DeferredObject<EntityType<? extends Entity>>, EntityRendererProvider<?>> getRenderers() {

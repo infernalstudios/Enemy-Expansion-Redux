@@ -21,6 +21,9 @@ public final class EEAnimations {
     public static final RawAnimation HAPPY = RawAnimation.begin().thenPlay("happy");
     public static final RawAnimation LEAP = RawAnimation.begin().thenPlay("leap");
 
+    // Equestrian
+    public static final RawAnimation PANICKED = RawAnimation.begin().thenLoop("panicked");
+
     // Vampire
     public static final RawAnimation VAMPIRE_ALERT = RawAnimation.begin().then("alert", Animation.LoopType.PLAY_ONCE);
     public static final RawAnimation VAMPIRE_CHASE = RawAnimation.begin().thenLoop("chase");
