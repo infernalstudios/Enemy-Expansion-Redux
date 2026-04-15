@@ -7,6 +7,7 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -20,6 +21,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.infernalstudios.enemyexp.EEMod;
 import org.infernalstudios.enemyexp.content.EEAnimations;
+import org.infernalstudios.enemyexp.content.entity.goal.HardLookAtTargetGoal;
+import org.infernalstudios.enemyexp.content.entity.goal.RangedKitingGoal;
 import org.infernalstudios.enemyexp.core.util.AnimUtils;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoEntity;
@@ -32,10 +35,13 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 
 public class EquestrianEntity extends Zombie implements GeoEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+
     private static final int PANIC_TIME_TICKS = 60;
+
     /**
      * 0 - normal
      * 1 - panic
+     * 2 - kiting
      */
     private static final EntityDataAccessor<Integer> STATE = SynchedEntityData.defineId(EquestrianEntity.class, EntityDataSerializers.INT);
 
@@ -54,6 +60,8 @@ public class EquestrianEntity extends Zombie implements GeoEntity {
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new EquestrianPanicGoal(this, 1.4F));
         this.goalSelector.addGoal(1, new FloatGoal(this));
+        this.goalSelector.addGoal(2, new EquestrianRangedKitingGoal(this));
+        this.goalSelector.addGoal(3, new HardLookAtTargetGoal(this, 10.0F, 10.0F));
         this.targetSelector.addGoal(2, new HurtByTargetGoal(this));
         this.goalSelector.addGoal(3, new RandomStrollGoal(this, 0.8));
         this.goalSelector.addGoal(4, new RandomLookAroundGoal(this));
@@ -67,8 +75,16 @@ public class EquestrianEntity extends Zombie implements GeoEntity {
     }
 
     @Override
+    protected void handleAttributes(float difficulty) {
+        // This makes it have the same values as the Leader Zombies
+        this.getAttribute(Attributes.SPAWN_REINFORCEMENTS_CHANCE).addPermanentModifier(new AttributeModifier("Leader zombie bonus", this.random.nextDouble() * (double) 0.25F + (double) 0.5F, AttributeModifier.Operation.ADDITION));
+        this.getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier("Leader zombie bonus", this.random.nextDouble() * (double) 3.0F + (double) 1.0F, AttributeModifier.Operation.MULTIPLY_TOTAL));
+        this.setCanBreakDoors(this.supportsBreakDoorGoal());
+    }
+
+    @Override
     public boolean hurt(DamageSource source, float amount) {
-        if (source.getEntity() instanceof Player player && !player.getAbilities().instabuild && !this.level().isClientSide) {
+        if (source.getEntity() instanceof Player player && !player.getAbilities().instabuild && !this.level().isClientSide && this.getState() != 1) {
             setState(1);
             EEMod.scheduleTask((ServerLevel) this.level(), PANIC_TIME_TICKS, () -> {
                 if (this.isDeadOrDying()) return;
@@ -88,6 +104,10 @@ public class EquestrianEntity extends Zombie implements GeoEntity {
         return this.entityData.get(STATE);
     }
 
+    public boolean isInSpecialState() {
+        return this.entityData.get(STATE) != 0;
+    }
+
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar data) {
         data.add(new AnimationController<>(this, "movement", 2, this::movementPredicate));
@@ -95,6 +115,10 @@ public class EquestrianEntity extends Zombie implements GeoEntity {
     }
 
     private PlayState movementPredicate(AnimationState<?> event) {
+        if (getState() == 2) {
+            event.getController().setAnimation(EEAnimations.TROT);
+            return PlayState.CONTINUE;
+        }
         if (getState() != 0) return PlayState.STOP;
         return AnimUtils.idleWalkAnimation(event);
     }
@@ -123,6 +147,20 @@ public class EquestrianEntity extends Zombie implements GeoEntity {
                 return equestrian.getState() == 1;
             }
             return false;
+        }
+    }
+
+    public static class EquestrianRangedKitingGoal extends RangedKitingGoal {
+        EquestrianEntity equestrian;
+
+        public EquestrianRangedKitingGoal(EquestrianEntity mob) {
+            super(mob, 0.6D);
+            this.equestrian = mob;
+        }
+
+        @Override
+        public boolean canUse() {
+            return super.canUse() && !equestrian.isInSpecialState();
         }
     }
 }
