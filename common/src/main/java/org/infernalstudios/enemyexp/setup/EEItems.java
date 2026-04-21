@@ -26,6 +26,7 @@ public final class EEItems {
     public static final DeferredObject<Item> VAMPIRE_SPAWN_EGG = spawnEgg("vampire_spawn_egg", EEntities.VAMPIRE.get(), 0x1A1A1A, 0x8A0303);
     public static final DeferredObject<Item> BITER_SPAWN_EGG = spawnEgg("biter_spawn_egg", EEntities.BITER.get(), 0x8A0303, 0x1A1A1A);
     public static final DeferredObject<Item> EQUESTRIAN_SPAWN_EGG = spawnEgg("equestrian_spawn_egg", EEntities.EQUESTRIAN.get(), 0xbedac3, 0xa8cab6);
+    public static final DeferredObject<Item> GOBLIN_THIEF_SPAWN_EGG = spawnEgg("goblin_thief_spawn_egg", EEntities.GOBLIN_THIEF.get(), 0x2d5e69, 0x364151);
     public static final DeferredObject<Item> VAMPEAR = item("vampear", () -> new VampearItem(new Item.Properties()), true, true);
 
     private EEItems() {

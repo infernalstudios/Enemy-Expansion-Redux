@@ -16,6 +16,11 @@ public final class EEAnimations {
     public static final RawAnimation CHARGE = RawAnimation.begin().thenPlayAndHold("charge");
     public static final RawAnimation DASH = RawAnimation.begin().thenLoop("dash");
 
+    // Goblin Thief
+    public static final RawAnimation SUSPICIOUS = RawAnimation.begin().thenLoop("suspicious");
+    public static final RawAnimation SNEAKY = RawAnimation.begin().thenLoop("sneaky");
+    public static final RawAnimation SPRINT_PANIC = RawAnimation.begin().thenLoop("sprint_panic");
+
     // Meature
     public static final RawAnimation DANCE = RawAnimation.begin().thenLoop("dance");
     public static final RawAnimation HAPPY = RawAnimation.begin().thenPlay("happy");

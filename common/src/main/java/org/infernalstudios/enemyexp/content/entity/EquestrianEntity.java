@@ -11,7 +11,6 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
-import net.minecraft.world.entity.ai.goal.PanicGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
@@ -21,9 +20,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.infernalstudios.enemyexp.EEMod;
 import org.infernalstudios.enemyexp.content.EEAnimations;
-import org.infernalstudios.enemyexp.content.entity.goal.EquestrianChargeGoal;
-import org.infernalstudios.enemyexp.content.entity.goal.HardLookAtTargetGoal;
-import org.infernalstudios.enemyexp.content.entity.goal.RangedKitingGoal;
+import org.infernalstudios.enemyexp.content.entity.goal.*;
 import org.infernalstudios.enemyexp.core.util.AnimUtils;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoEntity;
@@ -70,8 +67,8 @@ public class EquestrianEntity extends Zombie implements GeoEntity, IChargeable {
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new EquestrianPanicGoal(this, 1.4F));
         this.goalSelector.addGoal(1, new FloatGoal(this));
+        this.goalSelector.addGoal(1, new ControlPanicGoal(this, 1.4F, () -> this.getState() == STATE_PANIC));
         this.goalSelector.addGoal(2, new EquestrianChargeGoal(this));
         this.goalSelector.addGoal(3, new EquestrianRangedKitingGoal(this));
         this.goalSelector.addGoal(4, new HardLookAtTargetGoal(this, 10.0F, 10.0F));
@@ -215,18 +212,6 @@ public class EquestrianEntity extends Zombie implements GeoEntity, IChargeable {
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return cache;
-    }
-
-    public static class EquestrianPanicGoal extends PanicGoal {
-        public EquestrianPanicGoal(EquestrianEntity mob, double speedModifier) {
-            super(mob, speedModifier);
-        }
-
-        @Override
-        protected boolean shouldPanic() {
-            if (mob instanceof EquestrianEntity equestrian) return equestrian.getState() == STATE_PANIC;
-            return false;
-        }
     }
 
     public static class EquestrianRangedKitingGoal extends RangedKitingGoal {
