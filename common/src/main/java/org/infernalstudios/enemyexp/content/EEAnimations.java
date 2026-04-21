@@ -24,6 +24,8 @@ public final class EEAnimations {
     // Equestrian
     public static final RawAnimation PANICKED = RawAnimation.begin().thenLoop("panicked");
     public static final RawAnimation TROT = RawAnimation.begin().thenLoop("trot");
+    public static final RawAnimation PREPARE = RawAnimation.begin().thenPlayAndHold("prepare");
+    public static final RawAnimation GALLOP = RawAnimation.begin().thenLoop("gallop");
 
     // Vampire
     public static final RawAnimation VAMPIRE_ALERT = RawAnimation.begin().then("alert", Animation.LoopType.PLAY_ONCE);

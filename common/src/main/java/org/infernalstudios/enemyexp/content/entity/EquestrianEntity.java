@@ -21,6 +21,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.infernalstudios.enemyexp.EEMod;
 import org.infernalstudios.enemyexp.content.EEAnimations;
+import org.infernalstudios.enemyexp.content.entity.goal.EquestrianChargeGoal;
 import org.infernalstudios.enemyexp.content.entity.goal.HardLookAtTargetGoal;
 import org.infernalstudios.enemyexp.content.entity.goal.RangedKitingGoal;
 import org.infernalstudios.enemyexp.core.util.AnimUtils;
@@ -33,45 +34,56 @@ import software.bernie.geckolib.core.animation.AnimationState;
 import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-public class EquestrianEntity extends Zombie implements GeoEntity {
-    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+public class EquestrianEntity extends Zombie implements GeoEntity, IChargeable {
+    // State values
+    public static final int STATE_NORMAL = 0;
+    public static final int STATE_PANIC = 1;
+    public static final int STATE_KITING = 2;
+    public static final int STATE_CHARGING_GALLOP = 3;
 
-    private static final int PANIC_TIME_TICKS = 60;
+    public static final int PANIC_TIME_TICKS = 60;
+    public static final int CHARGE_WINDUP = 20;
+    public static final int CHARGE_DURATION = 13;
+    public static final float CHARGE_SPEED = 1.0F;
+    public static final float CHARGE_DAMAGE = 10.0F;
+    public static final float CHARGE_KNOCKBACK = 1.7F;
 
-    /**
-     * 0 - normal
-     * 1 - panic
-     * 2 - kiting
-     */
     private static final EntityDataAccessor<Integer> STATE = SynchedEntityData.defineId(EquestrianEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> CHARGE_TIME = SynchedEntityData.defineId(EquestrianEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Float> CHARGE_DIR_X = SynchedEntityData.defineId(EquestrianEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> CHARGE_DIR_Z = SynchedEntityData.defineId(EquestrianEntity.class, EntityDataSerializers.FLOAT);
+
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     public EquestrianEntity(EntityType<? extends Zombie> entityType, Level level) {
         super(entityType, level);
     }
 
-
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
-        this.entityData.define(STATE, 0);
+        this.entityData.define(STATE, STATE_NORMAL);
+        this.entityData.define(CHARGE_TIME, 0);
+        this.entityData.define(CHARGE_DIR_X, 0F);
+        this.entityData.define(CHARGE_DIR_Z, 0F);
     }
 
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new EquestrianPanicGoal(this, 1.4F));
         this.goalSelector.addGoal(1, new FloatGoal(this));
-        this.goalSelector.addGoal(2, new EquestrianRangedKitingGoal(this));
-        this.goalSelector.addGoal(3, new HardLookAtTargetGoal(this, 10.0F, 10.0F));
+        this.goalSelector.addGoal(2, new EquestrianChargeGoal(this));
+        this.goalSelector.addGoal(3, new EquestrianRangedKitingGoal(this));
+        this.goalSelector.addGoal(4, new HardLookAtTargetGoal(this, 10.0F, 10.0F));
+        this.goalSelector.addGoal(5, new RandomStrollGoal(this, 0.8));
+        this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));
+
         this.targetSelector.addGoal(2, new HurtByTargetGoal(this));
-        this.goalSelector.addGoal(3, new RandomStrollGoal(this, 0.8));
-        this.goalSelector.addGoal(4, new RandomLookAroundGoal(this));
         this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Player.class, false, false));
     }
 
     public static AttributeSupplier.@NotNull Builder createAttributes() {
-        return Zombie.createAttributes()
-                .add(Attributes.ATTACK_DAMAGE, 3.0D)
-                .add(Attributes.MOVEMENT_SPEED, 0.3D);
+        return Zombie.createAttributes().add(Attributes.ATTACK_DAMAGE, 3.0D).add(Attributes.MOVEMENT_SPEED, 0.3D);
     }
 
     @Override
@@ -82,18 +94,74 @@ public class EquestrianEntity extends Zombie implements GeoEntity {
         this.setCanBreakDoors(this.supportsBreakDoorGoal());
     }
 
+    private void lockRotationDuringCharge() {
+        this.setYRot(this.yRotO);
+        this.yHeadRot = this.yRotO;
+        this.yBodyRot = this.yRotO;
+        this.setXRot(this.xRotO);
+    }
+
+    @Override
+    protected void customServerAiStep() {
+        super.customServerAiStep();
+        if (isDashing()) lockRotationDuringCharge();
+    }
+
+    @Override
+    public void aiStep() {
+        super.aiStep();
+        if (isDashing()) lockRotationDuringCharge();
+    }
+
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        if (source.getEntity() instanceof Player player && !player.getAbilities().instabuild && !this.level().isClientSide && this.getState() != 1) {
-            setState(1);
-            EEMod.scheduleTask((ServerLevel) this.level(), PANIC_TIME_TICKS, () -> {
-                if (this.isDeadOrDying()) return;
-                ServerLevel serverLevel = (ServerLevel) this.level();
-                setState(0);
-                serverLevel.sendParticles(ParticleTypes.ANGRY_VILLAGER, this.getX(), this.getY() + 1, this.getZ(), 5, 1.0D, 1.0D, 1.0D, 0.6);
-            });
+        if (source.getEntity() instanceof Player player && !player.getAbilities().instabuild && !this.level().isClientSide) {
+            if (getState() != STATE_PANIC && getState() != STATE_CHARGING_GALLOP) {
+                setState(STATE_PANIC);
+                EEMod.scheduleTask((ServerLevel) this.level(), PANIC_TIME_TICKS, () -> {
+                    if (this.isDeadOrDying()) return;
+                    ServerLevel serverLevel = (ServerLevel) this.level();
+                    serverLevel.sendParticles(ParticleTypes.ANGRY_VILLAGER, this.getX(), this.getY() + 1, this.getZ(), 5, 1.0D, 1.0D, 1.0D, 0.6);
+                    setState(STATE_NORMAL);
+                });
+            }
         }
         return super.hurt(source, amount);
+    }
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar data) {
+        data.add(new AnimationController<>(this, "movement", 2, this::movementPredicate));
+        data.add(new AnimationController<>(this, "special", 2, this::specialPredicate));
+    }
+
+    private PlayState movementPredicate(AnimationState<?> event) {
+        int chargeTime = getChargeTime();
+        // Dashing
+        if (chargeTime > 0 && chargeTime <= CHARGE_DURATION) {
+            event.getController().setAnimation(EEAnimations.GALLOP);
+            return PlayState.CONTINUE;
+        }
+        // Windup
+        if (chargeTime > CHARGE_DURATION) {
+            event.getController().setAnimation(EEAnimations.PREPARE);
+            return PlayState.CONTINUE;
+        }
+        // Kiting
+        if (getState() == STATE_KITING) {
+            event.getController().setAnimation(EEAnimations.TROT);
+            return PlayState.CONTINUE;
+        }
+        if (getState() != STATE_NORMAL) return PlayState.STOP;
+        return AnimUtils.idleWalkAnimation(event);
+    }
+
+    private PlayState specialPredicate(AnimationState<?> event) {
+        if (getState() == STATE_PANIC && !AnimUtils.isNotMoving(event)) {
+            event.getController().setAnimation(EEAnimations.PANICKED);
+            return PlayState.CONTINUE;
+        }
+        return PlayState.STOP;
     }
 
     public void setState(int state) {
@@ -105,30 +173,43 @@ public class EquestrianEntity extends Zombie implements GeoEntity {
     }
 
     public boolean isInSpecialState() {
-        return this.entityData.get(STATE) != 0;
+        return getState() != STATE_NORMAL;
+    }
+
+    /** True only during the actual dash (not windup). */
+    public boolean isDashing() {
+        int t = getChargeTime();
+        return t > 0 && t <= CHARGE_DURATION;
     }
 
     @Override
-    public void registerControllers(AnimatableManager.ControllerRegistrar data) {
-        data.add(new AnimationController<>(this, "movement", 2, this::movementPredicate));
-        data.add(new AnimationController<>(this, "special", 2, this::specialPredicate));
+    public int getChargeTime() {
+        return this.entityData.get(CHARGE_TIME);
     }
 
-    private PlayState movementPredicate(AnimationState<?> event) {
-        if (getState() == 2) {
-            event.getController().setAnimation(EEAnimations.TROT);
-            return PlayState.CONTINUE;
-        }
-        if (getState() != 0) return PlayState.STOP;
-        return AnimUtils.idleWalkAnimation(event);
+    @Override
+    public void setChargeTime(int time) {
+        this.entityData.set(CHARGE_TIME, time);
     }
 
-    private PlayState specialPredicate(AnimationState<?> event) {
-        if (getState() == 1 && !AnimUtils.isNotMoving(event)) {
-            event.getController().setAnimation(EEAnimations.PANICKED);
-            return PlayState.CONTINUE;
-        }
-        return PlayState.STOP;
+    @Override
+    public float getChargeDirX() {
+        return this.entityData.get(CHARGE_DIR_X);
+    }
+
+    @Override
+    public void setChargeDirX(float x) {
+        this.entityData.set(CHARGE_DIR_X, x);
+    }
+
+    @Override
+    public float getChargeDirZ() {
+        return this.entityData.get(CHARGE_DIR_Z);
+    }
+
+    @Override
+    public void setChargeDirZ(float z) {
+        this.entityData.set(CHARGE_DIR_Z, z);
     }
 
     @Override
@@ -143,15 +224,13 @@ public class EquestrianEntity extends Zombie implements GeoEntity {
 
         @Override
         protected boolean shouldPanic() {
-            if (mob instanceof EquestrianEntity equestrian) {
-                return equestrian.getState() == 1;
-            }
+            if (mob instanceof EquestrianEntity equestrian) return equestrian.getState() == STATE_PANIC;
             return false;
         }
     }
 
     public static class EquestrianRangedKitingGoal extends RangedKitingGoal {
-        EquestrianEntity equestrian;
+        private final EquestrianEntity equestrian;
 
         public EquestrianRangedKitingGoal(EquestrianEntity mob) {
             super(mob, 0.6D);

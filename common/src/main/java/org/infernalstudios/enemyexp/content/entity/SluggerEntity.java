@@ -5,10 +5,10 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.goal.MoveThroughVillageGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.animal.IronGolem;
@@ -19,6 +19,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.infernalstudios.enemyexp.content.EEAnimations;
+import org.infernalstudios.enemyexp.content.entity.goal.ChargeAttackGoal;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlAttackGoal;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlLookAtPlayerGoal;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlRandomLookAroundGoal;
@@ -32,22 +33,22 @@ import software.bernie.geckolib.core.animation.AnimationState;
 import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-import java.util.EnumSet;
-import java.util.List;
-
-public class SluggerEntity extends Zombie implements GeoEntity {
+public class SluggerEntity extends Zombie implements GeoEntity, IChargeable {
     private static final EntityDataAccessor<Integer> CHARGE_TIME = SynchedEntityData.defineId(SluggerEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Float> CHARGE_DIR_X = SynchedEntityData.defineId(SluggerEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Float> CHARGE_DIR_Z = SynchedEntityData.defineId(SluggerEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<String> TEXTURE = SynchedEntityData.defineId(SluggerEntity.class, EntityDataSerializers.STRING);
+
     private static final String NORMAL_TEXTURE = "slugger";
-    private static final String STAGGERED_CHARGE = "slugger_charge";
+    private static final String WINDUP_TEXTURE = "slugger_charge";
     private static final String DASHING_TEXTURE = "slugger_dashing";
+
     private static final int CHARGE_DURATION = 8;
     private static final int CHARGE_WINDUP = 10;
     private static final float CHARGE_SPEED = 1.0F;
     private static final float CHARGE_DAMAGE = 6.0F;
     private static final float CHARGE_KNOCKBACK = 1.5F;
+
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     public SluggerEntity(EntityType<? extends Zombie> entityType, Level level) {
@@ -64,13 +65,18 @@ public class SluggerEntity extends Zombie implements GeoEntity {
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new SluggerChargeGoal(this));
-        this.goalSelector.addGoal(2, new ControlAttackGoal(this, 1.0D, false, () -> this.getChargeTime() <= 0));
+        this.goalSelector.addGoal(1, new ChargeAttackGoal<>(this, new SluggerChargeCallbacks(),
+                CHARGE_WINDUP, CHARGE_DURATION, CHARGE_SPEED, CHARGE_DAMAGE, CHARGE_KNOCKBACK
+        ));
+        this.goalSelector.addGoal(2, new ControlAttackGoal(this, 1.0D, false,
+                () -> this.getChargeTime() <= 0));
+        this.goalSelector.addGoal(8, new ControlLookAtPlayerGoal(this, Player.class, 8.0F,
+                () -> this.getChargeTime() <= 0));
+        this.goalSelector.addGoal(9, new ControlRandomLookAroundGoal(this,
+                () -> this.getChargeTime() <= 0));
+
         this.goalSelector.addGoal(6, new MoveThroughVillageGoal(this, 1.0F, true, 4, this::canBreakDoors));
         this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.0F));
-        this.goalSelector.addGoal(8, new ControlLookAtPlayerGoal(this, Player.class, 8.0F, () -> this.getChargeTime() <= 0));
-        this.goalSelector.addGoal(9, new ControlRandomLookAroundGoal(this, () -> this.getChargeTime() <= 0));
-
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this).setAlertOthers(ZombifiedPiglin.class));
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
         this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, AbstractVillager.class, false));
@@ -111,7 +117,7 @@ public class SluggerEntity extends Zombie implements GeoEntity {
             Vec3 toPlayer = player.position().subtract(this.position()).normalize();
             this.entityData.set(CHARGE_DIR_X, (float) toPlayer.x);
             this.entityData.set(CHARGE_DIR_Z, (float) toPlayer.z);
-            setTexture(STAGGERED_CHARGE);
+            setTexture(WINDUP_TEXTURE);
             setChargeTime(CHARGE_DURATION + CHARGE_WINDUP);
             this.getLookControl().setLookAt(player, 30.0F, 30.0F);
         }
@@ -133,16 +139,34 @@ public class SluggerEntity extends Zombie implements GeoEntity {
         return AnimUtils.idleWalkAnimation(event);
     }
 
+    @Override
     public int getChargeTime() {
         return this.entityData.get(CHARGE_TIME);
     }
 
+    @Override
     public void setChargeTime(int time) {
         this.entityData.set(CHARGE_TIME, time);
     }
 
-    public boolean isCharging() {
-        return getChargeTime() > 0 && getChargeTime() <= CHARGE_DURATION;
+    @Override
+    public float getChargeDirX() {
+        return this.entityData.get(CHARGE_DIR_X);
+    }
+
+    @Override
+    public void setChargeDirX(float x) {
+        this.entityData.set(CHARGE_DIR_X, x);
+    }
+
+    @Override
+    public float getChargeDirZ() {
+        return this.entityData.get(CHARGE_DIR_Z);
+    }
+
+    @Override
+    public void setChargeDirZ(float z) {
+        this.entityData.set(CHARGE_DIR_Z, z);
     }
 
     public String getTexture() {
@@ -151,6 +175,11 @@ public class SluggerEntity extends Zombie implements GeoEntity {
 
     public void setTexture(String texture) {
         this.entityData.set(TEXTURE, texture);
+    }
+
+    public boolean isCharging() {
+        int t = getChargeTime();
+        return t > 0 && t <= CHARGE_DURATION;
     }
 
     @Override
@@ -167,83 +196,26 @@ public class SluggerEntity extends Zombie implements GeoEntity {
         return this.cache;
     }
 
-    public static class SluggerChargeGoal extends Goal {
-        private final SluggerEntity mob;
-        private float chargeDirectionX;
-        private float chargeDirectionZ;
-
-        public SluggerChargeGoal(SluggerEntity mob) {
-            this.mob = mob;
-            this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
+    private class SluggerChargeCallbacks implements ChargeAttackGoal.ChargeAttackCallbacks {
+        @Override
+        public void onWindupStart() {
+            // Texture is set in hurt() just before chargeTime is assigned,
+            // so nothing extra needed here.
         }
 
         @Override
-        public boolean canUse() {
-            return this.mob.getChargeTime() > 0;
+        public void onChargeTick() {
+            setTexture(DASHING_TEXTURE);
         }
 
         @Override
-        public boolean canContinueToUse() {
-            return canUse();
+        public void onChargeEnd() {
+            setTexture(NORMAL_TEXTURE);
         }
 
         @Override
-        public void start() {
-            this.chargeDirectionX = this.mob.entityData.get(CHARGE_DIR_X);
-            this.chargeDirectionZ = this.mob.entityData.get(CHARGE_DIR_Z);
-        }
-
-        @Override
-        public void tick() {
-            int chargeTime = this.mob.getChargeTime();
-            if (chargeTime <= 0) return;
-
-            if (chargeTime > CHARGE_DURATION) {
-                this.mob.setDeltaMovement(0, this.mob.getDeltaMovement().y, 0);
-            } else {
-                performCharge();
-            }
-
-            if (chargeTime == 1) {
-                this.mob.setTexture(NORMAL_TEXTURE);
-            }
-
-            this.mob.setChargeTime(chargeTime - 1);
-            this.mob.hurtMarked = true;
-        }
-
-        private void performCharge() {
-            this.mob.setTexture(DASHING_TEXTURE);
-            this.mob.setDeltaMovement(
-                    this.chargeDirectionX * CHARGE_SPEED,
-                    this.mob.getDeltaMovement().y,
-                    this.chargeDirectionZ * CHARGE_SPEED
-            );
-
-            if (!this.mob.level().isClientSide) {
-                damageCollidingEntities();
-            }
-        }
-
-        private void damageCollidingEntities() {
-            List<LivingEntity> collided = this.mob.level().getEntitiesOfClass(
-                    LivingEntity.class,
-                    this.mob.getBoundingBox().inflate(0.5)
-            );
-            collided.remove(this.mob);
-
-            for (LivingEntity entity : collided) {
-                entity.hurt(this.mob.damageSources().mobAttack(this.mob), CHARGE_DAMAGE);
-                Vec3 knockbackDir = entity.position().subtract(this.mob.position()).normalize();
-                entity.push(knockbackDir.x * CHARGE_KNOCKBACK, 0.3, knockbackDir.z * CHARGE_KNOCKBACK);
-            }
-        }
-
-        @Override
-        public void stop() {
-            this.mob.setTexture(NORMAL_TEXTURE);
-            this.mob.setChargeTime(0);
-            this.mob.setDeltaMovement(0, this.mob.getDeltaMovement().y, 0);
+        public void onStop() {
+            setTexture(NORMAL_TEXTURE);
         }
     }
 }
