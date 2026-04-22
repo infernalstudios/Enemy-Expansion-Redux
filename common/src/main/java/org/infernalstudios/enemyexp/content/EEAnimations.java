@@ -21,6 +21,7 @@ public final class EEAnimations {
     public static final RawAnimation SNEAKY = RawAnimation.begin().thenLoop("sneaky");
     public static final RawAnimation SPRINT_PANIC = RawAnimation.begin().thenLoop("sprint_panic");
     public static final RawAnimation POUNCE_LAND = RawAnimation.begin().thenPlay("pounce").thenPlay("land");
+    public static final RawAnimation SPRINT_CONFIDENT = RawAnimation.begin().thenLoop("sprint_confident");
 
     // Meature
     public static final RawAnimation DANCE = RawAnimation.begin().thenLoop("dance");
