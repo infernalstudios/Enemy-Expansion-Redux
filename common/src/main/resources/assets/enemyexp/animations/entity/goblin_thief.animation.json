@@ -1226,7 +1226,7 @@
 			}
 		},
 		"pounce": {
-			"loop": true,
+			"loop": false,
 			"animation_length": 1.25,
 			"bones": {
 				"all": {
@@ -1613,7 +1613,7 @@
 			}
 		},
 		"land": {
-			"loop": true,
+			"loop": false,
 			"animation_length": 0.5,
 			"bones": {
 				"all": {

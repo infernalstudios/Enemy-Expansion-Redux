@@ -9,6 +9,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
@@ -21,6 +22,7 @@ import org.infernalstudios.enemyexp.EEMod;
 import org.infernalstudios.enemyexp.content.EEAnimations;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlAttackGoal;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlPanicGoal;
+import org.infernalstudios.enemyexp.content.entity.goal.EELeapAttackGoal;
 import org.infernalstudios.enemyexp.core.util.AnimUtils;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoEntity;
@@ -34,10 +36,16 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 public class GoblinThiefEntity extends Monster implements GeoEntity {
     public static final int STATE_NORMAL = 0;
     public static final int STATE_PANIC = 1;
+    public static final int STATE_LEAP = 2;
+    public static final int STATE_SNEAK = 3;
 
     private static final int PANIC_RECOVERY_TICKS = 45;
+    private static final double MAX_TRIGGER_DISTANCE = 8.0D;
+    private static final double MIN_TRIGGER_DISTANCE = 3.0D;
+    private static final int COOLDOWN_TICKS = 105;
+    private static final int WINDUP_ENDS = 5;
+    private static final int ANIM_TOTAL = 42;
 
-    private static final EntityDataAccessor<Boolean> IS_SNEAKING = SynchedEntityData.defineId(GoblinThiefEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> STATE = SynchedEntityData.defineId(GoblinThiefEntity.class, EntityDataSerializers.INT);
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -51,21 +59,30 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
         super.registerGoals();
         this.goalSelector.addGoal(1, new FloatGoal(this));
         this.goalSelector.addGoal(1, new ControlPanicGoal(this, 1.4F, () -> this.getState() == STATE_PANIC));
-        this.goalSelector.addGoal(2, new ControlAttackGoal(this, 0.8D, true, () -> true){
+        this.goalSelector.addGoal(2, new EELeapAttackGoal<>(this, new GoblinThiefLeapCallbacks(this), MIN_TRIGGER_DISTANCE, MAX_TRIGGER_DISTANCE, COOLDOWN_TICKS, WINDUP_ENDS, ANIM_TOTAL){
+            @Override
+            public boolean canUse() {
+                return super.canUse() && getState() != STATE_LEAP && getState() != STATE_PANIC;
+            }
+        });
+        this.goalSelector.addGoal(3, new ControlAttackGoal(this, 0.8D, true, () -> getState() != STATE_LEAP && getState() != STATE_PANIC){
             @Override
             public void start() {
                 super.start();
-                setSneaking(true);
+                setState(STATE_SNEAK);
             }
 
             @Override
             public void stop() {
                 super.stop();
-                setSneaking(false);
+                if (getState() == STATE_SNEAK) {
+                    setState(STATE_NORMAL);
+                }
             }
         });
         this.goalSelector.addGoal(5, new RandomStrollGoal(this, 0.8));
         this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
 
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, false, false));
@@ -76,7 +93,6 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(STATE, STATE_NORMAL);
-        this.entityData.define(IS_SNEAKING, false);
     }
 
     public static AttributeSupplier.@NotNull Builder createAttributes() {
@@ -89,7 +105,7 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        if (source.getEntity() instanceof Player player && !player.isCreative() && getState() != 1 && !this.level().isClientSide) {
+        if (source.getEntity() instanceof Player player && !player.isCreative() && getState() != STATE_PANIC && getState() != STATE_LEAP && !this.level().isClientSide) {
             setState(STATE_PANIC);
             EEMod.scheduleTask((ServerLevel) this.level(), PANIC_RECOVERY_TICKS, () -> {
                 if (this.isDeadOrDying()) return;
@@ -104,10 +120,11 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
     public void registerControllers(AnimatableManager.ControllerRegistrar data) {
         data.add(new AnimationController<>(this, "movement", 2, this::movementPredicate));
         data.add(new AnimationController<>(this, "special", 2, this::specialPredicate));
+        data.add(new AnimationController<>(this, "leap", state -> PlayState.STOP).triggerableAnim("leap", EEAnimations.POUNCE_LAND));
     }
 
     private PlayState movementPredicate(AnimationState<?> event) {
-        if (isSneaking()) {
+        if (getState() == STATE_SNEAK) {
             return AnimUtils.idleWalkAnimation(event, EEAnimations.SUSPICIOUS, EEAnimations.SNEAKY);
         }
         return AnimUtils.idleWalkAnimation(event);
@@ -129,16 +146,36 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
         this.entityData.set(STATE, state);
     }
 
-    public void setSneaking(boolean sneaking) {
-        this.entityData.set(IS_SNEAKING, sneaking);
-    }
-
-    public boolean isSneaking() {
-        return this.entityData.get(IS_SNEAKING);
-    }
-
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return cache;
+    }
+
+    private record GoblinThiefLeapCallbacks(GoblinThiefEntity entity) implements EELeapAttackGoal.ILeapCallbacks {
+        @Override
+        public void onWindUpStart() {
+            entity.setState(STATE_LEAP);
+            entity.triggerAnim("leap", "leap");
+        }
+
+        @Override
+        public void onWindUpEnd() {
+
+        }
+
+        @Override
+        public void onLeapStart() {
+
+        }
+
+        @Override
+        public void onLeapEnd() {
+
+        }
+
+        @Override
+        public void onStop() {
+            entity.setState(STATE_NORMAL);
+        }
     }
 }

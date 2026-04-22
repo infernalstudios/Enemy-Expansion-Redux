@@ -23,10 +23,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import org.infernalstudios.enemyexp.content.EEAnimations;
-import org.infernalstudios.enemyexp.content.entity.goal.ControlLookAtPlayerGoal;
-import org.infernalstudios.enemyexp.content.entity.goal.ControlRandomLookAroundGoal;
-import org.infernalstudios.enemyexp.content.entity.goal.ControlWaterAvoidingRandomStrollGoal;
-import org.infernalstudios.enemyexp.content.entity.goal.MeatureLeapAttackGoal;
+import org.infernalstudios.enemyexp.content.entity.goal.*;
 import org.infernalstudios.enemyexp.core.util.AnimUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -53,6 +50,11 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
 
     private static final int MAX_AGE = 10;
     private static final int HEALTH_PER_AGE = 2;
+    private static final double MAX_TRIGGER_DISTANCE = 8.0D;
+    private static final double MIN_TRIGGER_DISTANCE = 3.0D;
+    private static final int COOLDOWN_TICKS = 5;
+    private static final int WINDUP_ENDS = 2;
+    private static final int ANIM_TOTAL_TICKS = 30;
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
@@ -70,7 +72,7 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new FloatGoal(this));
-        this.goalSelector.addGoal(2, new MeatureLeapAttackGoal(this));
+        this.goalSelector.addGoal(2, new EELeapAttackGoal<>(this, new MeatureLeapCallbacks(this), MIN_TRIGGER_DISTANCE, MAX_TRIGGER_DISTANCE, COOLDOWN_TICKS, WINDUP_ENDS, ANIM_TOTAL_TICKS));
         this.goalSelector.addGoal(4, new MeatureAttackGoal(this));
         this.goalSelector.addGoal(5, new ControlWaterAvoidingRandomStrollGoal(this, 1.0F, () -> !isInSpecial()));
         this.goalSelector.addGoal(6, new ControlLookAtPlayerGoal(this, Player.class, 8.0F, () -> !isDancing() || !isHappy()));
@@ -282,6 +284,35 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
         @Override
         protected double getAttackReachSqr(LivingEntity attackTarget) {
             return 4.0F + attackTarget.getBbWidth();
+        }
+    }
+
+    private record MeatureLeapCallbacks(MeatureEntity meature) implements EELeapAttackGoal.ILeapCallbacks {
+
+        @Override
+        public void onWindUpStart() {
+            meature.setLeapRule();
+            meature.triggerAnim("leap", "leap");
+        }
+
+        @Override
+        public void onWindUpEnd() {
+
+        }
+
+        @Override
+        public void onLeapStart() {
+
+        }
+
+        @Override
+        public void onLeapEnd() {
+
+        }
+
+        @Override
+        public void onStop() {
+            meature.setIdleRule();
         }
     }
 }
