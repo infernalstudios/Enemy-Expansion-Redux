@@ -151,4 +151,8 @@ public class EELeapAttackGoal<T extends Mob> extends Goal {
         mob.setDeltaMovement(current.x + nx, yImpulse, current.z + nz);
         mob.hasImpulse = true;
     }
+
+    public T getMob() {
+        return mob;
+    }
 }

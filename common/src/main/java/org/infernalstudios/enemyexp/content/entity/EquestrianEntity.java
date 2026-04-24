@@ -7,6 +7,7 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -31,6 +32,8 @@ import software.bernie.geckolib.core.animation.AnimationState;
 import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
+import java.util.UUID;
+
 public class EquestrianEntity extends Zombie implements GeoEntity, IChargeable {
     // State values
     public static final int STATE_NORMAL = 0;
@@ -45,6 +48,8 @@ public class EquestrianEntity extends Zombie implements GeoEntity, IChargeable {
     public static final float CHARGE_DAMAGE = 10.0F;
     public static final float CHARGE_KNOCKBACK = 1.7F;
 
+    private static final UUID PANIC_KNOCKBACK_MODIFIER_UUID = UUID.fromString("6d7f9b8a-3e2c-4f1a-9d5b-8e7c6d5f4a3b");
+    private static final AttributeModifier PANIC_KNOCKBACK_MODIFIER = new AttributeModifier(PANIC_KNOCKBACK_MODIFIER_UUID, "Panic knockback resistance", 1.0D, AttributeModifier.Operation.ADDITION);
     private static final EntityDataAccessor<Integer> STATE = SynchedEntityData.defineId(EquestrianEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> CHARGE_TIME = SynchedEntityData.defineId(EquestrianEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Float> CHARGE_DIR_X = SynchedEntityData.defineId(EquestrianEntity.class, EntityDataSerializers.FLOAT);
@@ -66,6 +71,11 @@ public class EquestrianEntity extends Zombie implements GeoEntity, IChargeable {
     }
 
     @Override
+    public float maxUpStep() {
+        return 1F;
+    }
+
+    @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new FloatGoal(this));
         this.goalSelector.addGoal(1, new ControlPanicGoal(this, 1.4F, () -> this.getState() == STATE_PANIC));
@@ -75,12 +85,14 @@ public class EquestrianEntity extends Zombie implements GeoEntity, IChargeable {
         this.goalSelector.addGoal(5, new RandomStrollGoal(this, 0.8));
         this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));
 
-        this.targetSelector.addGoal(2, new HurtByTargetGoal(this));
+        this.targetSelector.addGoal(2, new HurtByTargetGoal(this, Zombie.class));
         this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Player.class, false, false));
     }
 
     public static AttributeSupplier.@NotNull Builder createAttributes() {
-        return Zombie.createAttributes().add(Attributes.ATTACK_DAMAGE, 3.0D).add(Attributes.MOVEMENT_SPEED, 0.3D);
+        return Zombie.createAttributes().add(Attributes.ATTACK_DAMAGE, 3.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.3D)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 0.1D);
     }
 
     @Override
@@ -112,14 +124,18 @@ public class EquestrianEntity extends Zombie implements GeoEntity, IChargeable {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
+        AttributeInstance attribute = this.getAttribute(Attributes.KNOCKBACK_RESISTANCE);
+
         if (source.getEntity() instanceof Player player && !player.getAbilities().instabuild && !this.level().isClientSide) {
             if (getState() != STATE_PANIC && getState() != STATE_CHARGING_GALLOP) {
                 setState(STATE_PANIC);
+                if (attribute != null) attribute.addTransientModifier(PANIC_KNOCKBACK_MODIFIER);
                 EEMod.scheduleTask((ServerLevel) this.level(), PANIC_TIME_TICKS, () -> {
                     if (this.isDeadOrDying()) return;
                     ServerLevel serverLevel = (ServerLevel) this.level();
                     serverLevel.sendParticles(ParticleTypes.ANGRY_VILLAGER, this.getX(), this.getY() + 1, this.getZ(), 5, 1.0D, 1.0D, 1.0D, 0.6);
                     setState(STATE_NORMAL);
+                    if (attribute != null) attribute.removeModifier(PANIC_KNOCKBACK_MODIFIER_UUID);
                 });
             }
         }
@@ -218,7 +234,7 @@ public class EquestrianEntity extends Zombie implements GeoEntity, IChargeable {
         private final EquestrianEntity equestrian;
 
         public EquestrianRangedKitingGoal(EquestrianEntity mob) {
-            super(mob, 0.6D);
+            super(mob, 1.1D);
             this.equestrian = mob;
         }
 

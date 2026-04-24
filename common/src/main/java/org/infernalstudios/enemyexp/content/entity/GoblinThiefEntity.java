@@ -7,6 +7,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -35,6 +37,8 @@ import software.bernie.geckolib.core.animation.AnimationState;
 import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
+import java.util.UUID;
+
 public class GoblinThiefEntity extends Monster implements GeoEntity {
     public static final int STATE_NORMAL = 0;
     public static final int STATE_PANIC = 1;
@@ -49,6 +53,9 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
     private static final int COOLDOWN_TICKS = 105;
     private static final int WINDUP_ENDS = 5;
     private static final int ANIM_TOTAL = 42;
+
+    private static final UUID PANIC_KNOCKBACK_MODIFIER_UUID = UUID.fromString("6d7f9b8a-3e2c-4f1a-9d5b-8e7c6d5f4a3b");
+    private static final AttributeModifier PANIC_KNOCKBACK_MODIFIER = new AttributeModifier(PANIC_KNOCKBACK_MODIFIER_UUID, "Panic knockback resistance", 1.0D, AttributeModifier.Operation.ADDITION);
 
     private static final EntityDataAccessor<Integer> STATE = SynchedEntityData.defineId(GoblinThiefEntity.class, EntityDataSerializers.INT);
 
@@ -108,7 +115,8 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
                 .add(Attributes.MAX_HEALTH, 30.0D)
                 .add(Attributes.ATTACK_DAMAGE, 6.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.39D)
-                .add(Attributes.FOLLOW_RANGE, 64.0D);
+                .add(Attributes.FOLLOW_RANGE, 64.0D)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 0.1D);
     }
 
     @Override
@@ -135,11 +143,15 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
+        AttributeInstance attribute = this.getAttribute(Attributes.KNOCKBACK_RESISTANCE);
+
         if (source.getEntity() instanceof Player player && !player.isCreative() && getState() != STATE_PANIC && getState() != STATE_LEAP && !this.level().isClientSide) {
             setState(STATE_PANIC);
+            if (attribute != null) attribute.addTransientModifier(PANIC_KNOCKBACK_MODIFIER);
             EEMod.scheduleTask((ServerLevel) this.level(), PANIC_RECOVERY_TICKS, () -> {
                 if (this.isDeadOrDying()) return;
                 setState(STATE_NORMAL);
+                if (attribute != null) attribute.removeModifier(PANIC_KNOCKBACK_MODIFIER_UUID);
             });
         }
 

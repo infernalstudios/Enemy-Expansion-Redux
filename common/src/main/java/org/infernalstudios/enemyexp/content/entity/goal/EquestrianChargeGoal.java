@@ -1,6 +1,7 @@
 package org.infernalstudios.enemyexp.content.entity.goal;
 
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.phys.Vec3;
 import org.infernalstudios.enemyexp.content.entity.EquestrianEntity;
 
@@ -77,6 +78,11 @@ public class EquestrianChargeGoal extends ChargeAttackGoal<EquestrianEntity> {
         @Override
         public void onStop() {
             mob.setState(EquestrianEntity.STATE_NORMAL);
+        }
+
+        @Override
+        public boolean canBeHurtNormally(LivingEntity entity) {
+            return !(entity instanceof Zombie);
         }
     }
 }

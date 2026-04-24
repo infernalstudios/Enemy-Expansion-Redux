@@ -3,15 +3,13 @@ package org.infernalstudios.enemyexp.content.entity;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MobType;
-import net.minecraft.world.entity.OwnableEntity;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
@@ -72,7 +70,18 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new FloatGoal(this));
-        this.goalSelector.addGoal(2, new EELeapAttackGoal<>(this, new MeatureLeapCallbacks(this), MIN_TRIGGER_DISTANCE, MAX_TRIGGER_DISTANCE, COOLDOWN_TICKS, WINDUP_ENDS, ANIM_TOTAL_TICKS));
+        this.goalSelector.addGoal(2, new EELeapAttackGoal<>(this, new MeatureLeapCallbacks(this), MIN_TRIGGER_DISTANCE, MAX_TRIGGER_DISTANCE, COOLDOWN_TICKS, WINDUP_ENDS, ANIM_TOTAL_TICKS){
+            @Override
+            public boolean canUse() {
+                if (getMob().getTarget() != null) {
+                    if (getMob().getTarget().getMainHandItem().getItem().equals(Items.ROTTEN_FLESH)) {
+                        return false;
+                    }
+                }
+
+                return super.canUse();
+            }
+        });
         this.goalSelector.addGoal(4, new MeatureAttackGoal(this));
         this.goalSelector.addGoal(5, new ControlWaterAvoidingRandomStrollGoal(this, 1.0F, () -> !isInSpecial()));
         this.goalSelector.addGoal(6, new ControlLookAtPlayerGoal(this, Player.class, 8.0F, () -> !isDancing() || !isHappy()));
@@ -88,7 +97,12 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
     protected @NotNull InteractionResult mobInteract(@NotNull Player player, @NotNull InteractionHand hand) {
         ItemStack itemstack = player.getItemInHand(hand);
         if (itemstack.is(Items.ROTTEN_FLESH)) {
-            if (getOwnerUUID() == null) setOwnerUUID(player.getUUID());
+            if (getOwnerUUID() == null) {
+                if (this.level() instanceof ServerLevel serverLevel) {
+                    ExperienceOrb.award(serverLevel, this.position(), 10);
+                }
+                setOwnerUUID(player.getUUID());
+            }
             if (!this.level().isClientSide) {
                 grow();
                 if (!player.getAbilities().instabuild) itemstack.shrink(1);
@@ -102,6 +116,11 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
     @Override
     public void tick() {
         super.tick();
+
+        if (getTarget() != null && getTarget().getMainHandItem().getItem().equals(Items.ROTTEN_FLESH)) {
+            setTarget(null);
+        }
+
         // Avoid targeting the owner.
         if (getOwnerUUID() != null && getTarget() != null) {
             LivingEntity target = getTarget();
@@ -278,6 +297,12 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
 
         @Override
         public boolean canUse() {
+            if (mob.getTarget() != null) {
+                if (mob.getTarget().getMainHandItem().getItem().equals(Items.ROTTEN_FLESH)) {
+                    return false;
+                }
+            }
+
             return super.canUse() && !this.mob.isVehicle() && !((MeatureEntity) this.mob).isLeaping();
         }
 

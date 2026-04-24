@@ -4,6 +4,7 @@ import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.infernalstudios.enemyexp.content.entity.IChargeable;
 
@@ -12,23 +13,20 @@ import java.util.List;
 
 /**
  * Goal for performing a charge attack, which consists of a windup phase (loading energy) and then a dash forward (the charge).
+ * <p>
+ * This ignores the path navigation system and forces the mob to move in a straight line, we made this to have more control
+ * and avoid creating more complex systems with mixins or creating a new path navigation. This goal shouldn't be used
+ * with mobs that doesn't have a normal walking movement (like flying mobs).
  *
  * @see IChargeable
  */
 public class ChargeAttackGoal<T extends Mob & IChargeable> extends Goal {
-    /** Callbacks to modify mob's texture/animation during the charge attack */
     public interface ChargeAttackCallbacks {
-        /** Called once when the windup phase begins */
         void onWindupStart();
-
-        /** Called every tick while the mob is dashing */
         void onChargeTick();
-
-        /** Called on the last charge tick. Restore the normal texture/animation here if needed */
         void onChargeEnd();
-
-        /** Called when the goal terminates for any reason (finished, target lost, externally interrupted) */
         void onStop();
+        boolean canBeHurtNormally(LivingEntity entity);
     }
 
     protected final T mob;
@@ -96,31 +94,38 @@ public class ChargeAttackGoal<T extends Mob & IChargeable> extends Goal {
 
     private void performCharge(int chargeTime) {
         callbacks.onChargeTick();
+        Vec3 currentMotion = mob.getDeltaMovement();
 
-        mob.setDeltaMovement(
-                dirX * chargeSpeed,
-                mob.getDeltaMovement().y,
-                dirZ * chargeSpeed
-        );
+        mob.setDeltaMovement(dirX * chargeSpeed, currentMotion.y, dirZ * chargeSpeed);
 
-        if (!mob.level().isClientSide) {
-            damageCollidingEntities();
-        }
+        handleStepUp();
 
-        if (chargeTime == 1) {
-            callbacks.onChargeEnd();
+        if (!mob.level().isClientSide) damageCollidingEntities();
+        if (chargeTime == 1) callbacks.onChargeEnd();
+    }
+
+    private void handleStepUp() {
+        if (mob.horizontalCollision && mob.onGround()) {
+            if (!canStepUp()) return;
+            mob.setDeltaMovement(mob.getDeltaMovement().x, 0.42f, mob.getDeltaMovement().z);
         }
     }
 
+    private boolean canStepUp() {
+        AABB checkBox = mob.getBoundingBox().move(dirX * 0.3, mob.maxUpStep(), dirZ * 0.3);
+        return mob.level().noCollision(mob, checkBox);
+    }
+
     private void damageCollidingEntities() {
-        List<LivingEntity> collided = mob.level().getEntitiesOfClass(
-                LivingEntity.class,
-                mob.getBoundingBox().inflate(0.5)
-        );
+        List<LivingEntity> collided = mob.level().getEntitiesOfClass(LivingEntity.class, mob.getBoundingBox().inflate(0.5));
         collided.remove(mob);
 
         for (LivingEntity entity : collided) {
-            entity.hurt(mob.damageSources().mobAttack(mob), chargeDamage);
+            if (!callbacks.canBeHurtNormally(entity)) {
+                entity.hurt(entity.damageSources().generic(), chargeDamage);
+            } else {
+                entity.hurt(mob.damageSources().mobAttack(mob), chargeDamage);
+            }
             Vec3 knockbackDir = entity.position().subtract(mob.position()).normalize();
             entity.push(knockbackDir.x * chargeKnockback, 0.3, knockbackDir.z * chargeKnockback);
         }
