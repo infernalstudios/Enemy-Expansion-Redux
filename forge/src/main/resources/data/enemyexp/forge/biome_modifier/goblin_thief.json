@@ -1,0 +1,10 @@
+{
+  "type": "forge:add_spawns",
+  "biomes": ["#minecraft:forest", "#minecraft:birch_forest", "#minecraft:dark_forest", "#minecraft:flower_forest", "#minecraft:jungle", "#forge:is_cave"],
+  "spawners": {
+    "type": "enemyexp:goblin_thief",
+    "weight": 25,
+    "minCount": 1,
+    "maxCount": 1
+  }
+}

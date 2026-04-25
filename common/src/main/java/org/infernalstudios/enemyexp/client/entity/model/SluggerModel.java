@@ -13,7 +13,16 @@ public class SluggerModel extends DefaultedEntityGeoModel<SluggerEntity> {
 
     @Override
     public ResourceLocation getTextureResource(SluggerEntity animatable) {
-        return EEMod.location("textures/entity/" + animatable.getTexture() + ".png");
+        String texture;
+        if (animatable.getState() == SluggerEntity.STATE_CHARGING) {
+            texture = "slugger_charge";
+        } else if (animatable.getState() == SluggerEntity.STATE_DASHING) {
+            texture = "slugger_dashing";
+        } else {
+            texture = "slugger";
+        }
+
+        return EEMod.location("textures/entity/" + texture + ".png");
     }
 
     @Override

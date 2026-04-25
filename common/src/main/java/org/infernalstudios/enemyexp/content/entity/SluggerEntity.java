@@ -35,14 +35,15 @@ import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 public class SluggerEntity extends Zombie implements GeoEntity, IChargeable {
+    public static final int STATE_NORMAL = 0;
+    public static final int STATE_CHARGING = 1;
+    public static final int STATE_DASHING = 2;
+    public static final int STATE_SPRINTING = 3;
+
     private static final EntityDataAccessor<Integer> CHARGE_TIME = SynchedEntityData.defineId(SluggerEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Float> CHARGE_DIR_X = SynchedEntityData.defineId(SluggerEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Float> CHARGE_DIR_Z = SynchedEntityData.defineId(SluggerEntity.class, EntityDataSerializers.FLOAT);
-    private static final EntityDataAccessor<String> TEXTURE = SynchedEntityData.defineId(SluggerEntity.class, EntityDataSerializers.STRING);
-
-    private static final String NORMAL_TEXTURE = "slugger";
-    private static final String WINDUP_TEXTURE = "slugger_charge";
-    private static final String DASHING_TEXTURE = "slugger_dashing";
+    private static final EntityDataAccessor<Integer> STATE = SynchedEntityData.defineId(SluggerEntity.class, EntityDataSerializers.INT);
 
     private static final int CHARGE_DURATION = 8;
     private static final int CHARGE_WINDUP = 10;
@@ -70,7 +71,21 @@ public class SluggerEntity extends Zombie implements GeoEntity, IChargeable {
                 CHARGE_WINDUP, CHARGE_DURATION, CHARGE_SPEED, CHARGE_DAMAGE, CHARGE_KNOCKBACK
         ));
         this.goalSelector.addGoal(2, new ControlAttackGoal(this, 1.0D, false,
-                () -> this.getChargeTime() <= 0));
+                () -> this.getChargeTime() <= 0) {
+            @Override
+            public void start() {
+                super.start();
+                setState(STATE_SPRINTING);
+            }
+
+            @Override
+            public void stop() {
+                super.stop();
+                if (getState() == STATE_SPRINTING) {
+                    setState(STATE_NORMAL);
+                }
+            }
+        });
         this.goalSelector.addGoal(8, new ControlLookAtPlayerGoal(this, Player.class, 8.0F,
                 () -> this.getChargeTime() <= 0));
         this.goalSelector.addGoal(9, new ControlRandomLookAroundGoal(this,
@@ -90,7 +105,7 @@ public class SluggerEntity extends Zombie implements GeoEntity, IChargeable {
         this.entityData.define(CHARGE_TIME, 0);
         this.entityData.define(CHARGE_DIR_X, 0F);
         this.entityData.define(CHARGE_DIR_Z, 0F);
-        this.entityData.define(TEXTURE, NORMAL_TEXTURE);
+        this.entityData.define(STATE, STATE_NORMAL);
     }
 
     private void lockRotationDuringCharge() {
@@ -118,7 +133,7 @@ public class SluggerEntity extends Zombie implements GeoEntity, IChargeable {
             Vec3 toPlayer = player.position().subtract(this.position()).normalize();
             this.entityData.set(CHARGE_DIR_X, (float) toPlayer.x);
             this.entityData.set(CHARGE_DIR_Z, (float) toPlayer.z);
-            setTexture(WINDUP_TEXTURE);
+            setState(STATE_CHARGING);
             setChargeTime(CHARGE_DURATION + CHARGE_WINDUP);
             this.getLookControl().setLookAt(player, 30.0F, 30.0F);
         }
@@ -137,6 +152,10 @@ public class SluggerEntity extends Zombie implements GeoEntity, IChargeable {
         } else if (chargeTime > 0) {
             return event.setAndContinue(EEAnimations.DASH);
         }
+        if (getState() == STATE_SPRINTING && !AnimUtils.isNotMoving(event)) {
+            return event.setAndContinue(EEAnimations.SPRINT);
+        }
+
         return AnimUtils.idleWalkAnimation(event);
     }
 
@@ -170,17 +189,17 @@ public class SluggerEntity extends Zombie implements GeoEntity, IChargeable {
         this.entityData.set(CHARGE_DIR_Z, z);
     }
 
-    public String getTexture() {
-        return this.entityData.get(TEXTURE);
-    }
-
-    public void setTexture(String texture) {
-        this.entityData.set(TEXTURE, texture);
-    }
-
     public boolean isCharging() {
         int t = getChargeTime();
         return t > 0 && t <= CHARGE_DURATION;
+    }
+
+    public int getState() {
+        return this.entityData.get(STATE);
+    }
+
+    public void setState(int state) {
+        this.entityData.set(STATE, state);
     }
 
     @Override
@@ -206,17 +225,17 @@ public class SluggerEntity extends Zombie implements GeoEntity, IChargeable {
 
         @Override
         public void onChargeTick() {
-            setTexture(DASHING_TEXTURE);
+            setState(STATE_DASHING);
         }
 
         @Override
         public void onChargeEnd() {
-            setTexture(NORMAL_TEXTURE);
+            setState(STATE_NORMAL);
         }
 
         @Override
         public void onStop() {
-            setTexture(NORMAL_TEXTURE);
+            setState(STATE_NORMAL);
         }
 
         @Override

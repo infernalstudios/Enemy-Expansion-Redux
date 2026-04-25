@@ -42,15 +42,19 @@ public final class EEntities {
     }
 
     public static void registerSpawns() {
-        SpawnPlacementsAccessor.callRegister(EEntities.SPRINTER.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
-        SpawnPlacementsAccessor.callRegister(EEntities.HAUL.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
-        SpawnPlacementsAccessor.callRegister(EEntities.SLUGGER.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
-        SpawnPlacementsAccessor.callRegister(EEntities.FRIGID.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
-        SpawnPlacementsAccessor.callRegister(EEntities.MEATURE.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
-        SpawnPlacementsAccessor.callRegister(EEntities.VAMPIRE.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
-        SpawnPlacementsAccessor.callRegister(EEntities.BITER.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
-        SpawnPlacementsAccessor.callRegister(EEntities.EQUESTRIAN.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
-        SpawnPlacementsAccessor.callRegister(EEntities.GOBLIN_THIEF.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
+        registerMobSpawn(EEntities.SPRINTER.get());
+        registerMobSpawn(EEntities.HAUL.get());
+        registerMobSpawn(EEntities.SLUGGER.get());
+        registerMobSpawn(EEntities.FRIGID.get());
+        registerMobSpawn(EEntities.MEATURE.get());
+        registerMobSpawn(EEntities.VAMPIRE.get());
+        registerMobSpawn(EEntities.BITER.get());
+        registerMobSpawn(EEntities.EQUESTRIAN.get());
+        registerMobSpawn(EEntities.GOBLIN_THIEF.get());
+    }
+
+    public static void registerMobSpawn(EntityType<?> type) {
+        SpawnPlacementsAccessor.callRegister(type, SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
     }
 
     public static void registerAttributes(BiConsumer<EntityType<? extends LivingEntity>, AttributeSupplier> consumer) {
