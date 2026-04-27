@@ -1,6 +1,6 @@
 {
   "type": "forge:add_spawns",
-  "biomes": ["#forge:is_plains", "#forge:is_desert"],
+  "biomes": "#forge:is_plains",
   "spawners": {
     "type": "enemyexp:equestrian",
     "weight": 25,

@@ -43,6 +43,7 @@ public class SprinterEntity extends Zombie implements GeoEntity {
      * instances of this entity could also have variations of these two textures (like the haul).
      */
     private static final EntityDataAccessor<String> TEXTURE = SynchedEntityData.defineId(SprinterEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Boolean> SIT = SynchedEntityData.defineId(SprinterEntity.class, EntityDataSerializers.BOOLEAN);
 
     private static final int STAGGER_RECOVERY_TICKS = 44;
 
@@ -73,11 +74,19 @@ public class SprinterEntity extends Zombie implements GeoEntity {
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(TEXTURE, getNormalTexture());
+        this.entityData.define(SIT, false);
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+
+        setSitting(this.getVehicle() != null);
     }
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        if (source.getEntity() instanceof Player player && !player.getAbilities().instabuild && !this.level().isClientSide) {
+        if (source.getEntity() instanceof Player player && !player.getAbilities().instabuild && !this.level().isClientSide && !isSitting()) {
             this.setTexture(getStaggeredTexture());
             triggerAnim("staggered_used", "staggered_used");
             this.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, STAGGER_RECOVERY_TICKS, 1, false, false, false));
@@ -99,6 +108,8 @@ public class SprinterEntity extends Zombie implements GeoEntity {
     }
 
     private PlayState movementPredicate(AnimationState<?> event) {
+        if (isSitting()) return event.setAndContinue(EEAnimations.SIT);
+
         return AnimUtils.idleWalkAnimation(event, EEAnimations.IDLE, EEAnimations.SPRINT);
     }
 
@@ -133,6 +144,14 @@ public class SprinterEntity extends Zombie implements GeoEntity {
 
     public void setTexture(String texture) {
         this.entityData.set(TEXTURE, texture);
+    }
+
+    public boolean isSitting() {
+        return this.entityData.get(SIT);
+    }
+
+    public void setSitting(boolean sitting) {
+        this.entityData.set(SIT, sitting);
     }
 
     @Override

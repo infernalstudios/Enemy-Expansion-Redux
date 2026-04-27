@@ -40,6 +40,7 @@ public class EquestrianEntity extends Zombie implements GeoEntity, IChargeable {
     public static final int STATE_PANIC = 1;
     public static final int STATE_KITING = 2;
     public static final int STATE_CHARGING_GALLOP = 3;
+    public static final int STATE_SITTING = 4;
 
     public static final int PANIC_TIME_TICKS = 60;
     public static final int CHARGE_WINDUP = 20;
@@ -78,7 +79,7 @@ public class EquestrianEntity extends Zombie implements GeoEntity, IChargeable {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new FloatGoal(this));
-        this.goalSelector.addGoal(1, new ControlPanicGoal(this, 1.4F, () -> this.getState() == STATE_PANIC));
+        this.goalSelector.addGoal(1, new ControlPanicGoal(this, 1.4F, () -> this.getState() == STATE_PANIC && this.getState() != STATE_SITTING));
         this.goalSelector.addGoal(2, new EquestrianChargeGoal(this));
         this.goalSelector.addGoal(3, new EquestrianRangedKitingGoal(this));
         this.goalSelector.addGoal(4, new HardLookAtTargetGoal(this, 10.0F, 10.0F));
@@ -108,6 +109,19 @@ public class EquestrianEntity extends Zombie implements GeoEntity, IChargeable {
         this.yHeadRot = this.yRotO;
         this.yBodyRot = this.yRotO;
         this.setXRot(this.xRotO);
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+
+        if (this.getVehicle() != null) {
+            this.setState(STATE_SITTING);
+        } else {
+            if (getState() == STATE_SITTING) {
+                this.setState(STATE_NORMAL);
+            }
+        }
     }
 
     @Override
@@ -165,6 +179,9 @@ public class EquestrianEntity extends Zombie implements GeoEntity, IChargeable {
             event.getController().setAnimation(EEAnimations.TROT);
             return PlayState.CONTINUE;
         }
+
+        if (getState() == STATE_SITTING) return event.setAndContinue(EEAnimations.SIT);
+
         if (getState() != STATE_NORMAL) return PlayState.STOP;
         return AnimUtils.idleWalkAnimation(event);
     }

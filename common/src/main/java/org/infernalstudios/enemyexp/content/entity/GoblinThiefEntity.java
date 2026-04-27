@@ -45,6 +45,7 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
     public static final int STATE_LEAP = 2;
     public static final int STATE_SNEAK = 3;
     public static final int STATE_CONFIDENT = 4;
+    public static final int STATE_SITTING = 5;
 
     private static final int PANIC_RECOVERY_TICKS = 45;
     private static final int CONFIDENT_TICKS = 50;
@@ -73,14 +74,14 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
         this.goalSelector.addGoal(1, new ControlAvoidEntityGoal<>(this, Player.class, 3.0F, 1.2D, 1.6D, () -> this.getState() == STATE_CONFIDENT));
         this.goalSelector.addGoal(1, new ControlAvoidEntityGoal<>(this, AbstractVillager.class, 3.0F, 1.2D, 1.6D, () -> this.getState() == STATE_CONFIDENT));
 
-        this.goalSelector.addGoal(2, new ControlPanicGoal(this, 1.4F, () -> this.getState() == STATE_PANIC));
+        this.goalSelector.addGoal(2, new ControlPanicGoal(this, 1.4F, () -> this.getState() == STATE_PANIC && this.getState() != STATE_SITTING));
         this.goalSelector.addGoal(3, new EELeapAttackGoal<>(this, new GoblinThiefLeapCallbacks(this), MIN_TRIGGER_DISTANCE, MAX_TRIGGER_DISTANCE, COOLDOWN_TICKS, WINDUP_ENDS, ANIM_TOTAL){
             @Override
             public boolean canUse() {
-                return super.canUse() && getState() != STATE_LEAP && getState() != STATE_PANIC && getState() != STATE_CONFIDENT;
+                return super.canUse() && getState() != STATE_LEAP && getState() != STATE_PANIC && getState() != STATE_CONFIDENT && getState() != STATE_SITTING;
             }
         });
-        this.goalSelector.addGoal(3, new ControlAttackGoal(this, 0.8D, true, () -> getState() != STATE_LEAP && getState() != STATE_PANIC && getState() != STATE_CONFIDENT){
+        this.goalSelector.addGoal(3, new ControlAttackGoal(this, 0.8D, true, () -> getState() != STATE_LEAP && getState() != STATE_PANIC && getState() != STATE_CONFIDENT && getState() != STATE_SITTING){
             @Override
             public void start() {
                 super.start();
@@ -120,8 +121,22 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
     }
 
     @Override
+    public void tick() {
+        super.tick();
+        if (this.getVehicle() != null) {
+            this.setState(STATE_SITTING);
+        } else {
+            if (getState() == STATE_SITTING) {
+                this.setState(STATE_NORMAL);
+            }
+        }
+    }
+
+    @Override
     public boolean doHurtTarget(@NotNull Entity entity) {
         boolean result = super.doHurtTarget(entity);
+
+        if (getState() == STATE_SITTING) return result;
 
         if (entity instanceof Player player) {
             if (player.totalExperience >= 20) {
@@ -145,7 +160,7 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
     public boolean hurt(DamageSource source, float amount) {
         AttributeInstance attribute = this.getAttribute(Attributes.KNOCKBACK_RESISTANCE);
 
-        if (source.getEntity() instanceof Player player && !player.isCreative() && getState() != STATE_PANIC && getState() != STATE_LEAP && !this.level().isClientSide) {
+        if (source.getEntity() instanceof Player player && !player.isCreative() && getState() != STATE_PANIC && getState() != STATE_LEAP && getState() != STATE_SITTING && !this.level().isClientSide) {
             setState(STATE_PANIC);
             if (attribute != null) attribute.addTransientModifier(PANIC_KNOCKBACK_MODIFIER);
             EEMod.scheduleTask((ServerLevel) this.level(), PANIC_RECOVERY_TICKS, () -> {
@@ -166,6 +181,8 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
     }
 
     private PlayState movementPredicate(AnimationState<?> event) {
+        if (getState() == STATE_SITTING) return event.setAndContinue(EEAnimations.SIT);
+
         if (getState() == STATE_SNEAK) {
             return AnimUtils.idleWalkAnimation(event, EEAnimations.SUSPICIOUS, EEAnimations.SNEAKY);
         }

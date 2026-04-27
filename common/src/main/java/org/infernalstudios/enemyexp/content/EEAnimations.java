@@ -8,6 +8,7 @@ public final class EEAnimations {
     public static final RawAnimation IDLE = RawAnimation.begin().thenLoop("idle");
     public static final RawAnimation WALK = RawAnimation.begin().thenLoop("walk");
     public static final RawAnimation SPRINT = RawAnimation.begin().thenLoop("sprint");
+    public static final RawAnimation SIT = RawAnimation.begin().thenLoop("sit");
 
     // Sprinter
     public static final RawAnimation STAGGERED_USED = RawAnimation.begin().then("staggered_used", Animation.LoopType.PLAY_ONCE);

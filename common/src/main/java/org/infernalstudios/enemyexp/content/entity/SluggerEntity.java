@@ -39,6 +39,7 @@ public class SluggerEntity extends Zombie implements GeoEntity, IChargeable {
     public static final int STATE_CHARGING = 1;
     public static final int STATE_DASHING = 2;
     public static final int STATE_SPRINTING = 3;
+    public static final int STATE_SITTING = 4;
 
     private static final EntityDataAccessor<Integer> CHARGE_TIME = SynchedEntityData.defineId(SluggerEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Float> CHARGE_DIR_X = SynchedEntityData.defineId(SluggerEntity.class, EntityDataSerializers.FLOAT);
@@ -71,7 +72,7 @@ public class SluggerEntity extends Zombie implements GeoEntity, IChargeable {
                 CHARGE_WINDUP, CHARGE_DURATION, CHARGE_SPEED, CHARGE_DAMAGE, CHARGE_KNOCKBACK
         ));
         this.goalSelector.addGoal(2, new ControlAttackGoal(this, 1.0D, false,
-                () -> this.getChargeTime() <= 0) {
+                () -> this.getChargeTime() <= 0 && this.getState() != STATE_SITTING) {
             @Override
             public void start() {
                 super.start();
@@ -116,6 +117,19 @@ public class SluggerEntity extends Zombie implements GeoEntity, IChargeable {
     }
 
     @Override
+    public void tick() {
+        super.tick();
+
+        if (this.getVehicle() != null) {
+            this.setState(STATE_SITTING);
+        } else {
+            if (getState() == STATE_SITTING) {
+                this.setState(STATE_NORMAL);
+            }
+        }
+    }
+
+    @Override
     protected void customServerAiStep() {
         super.customServerAiStep();
         if (isCharging()) lockRotationDuringCharge();
@@ -129,7 +143,7 @@ public class SluggerEntity extends Zombie implements GeoEntity, IChargeable {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        if (source.getEntity() instanceof Player player && !player.isCreative() && !isCharging() && !this.level().isClientSide) {
+        if (source.getEntity() instanceof Player player && !player.isCreative() && !isCharging() && !this.level().isClientSide && getState() != STATE_SITTING) {
             Vec3 toPlayer = player.position().subtract(this.position()).normalize();
             this.entityData.set(CHARGE_DIR_X, (float) toPlayer.x);
             this.entityData.set(CHARGE_DIR_Z, (float) toPlayer.z);
@@ -155,6 +169,8 @@ public class SluggerEntity extends Zombie implements GeoEntity, IChargeable {
         if (getState() == STATE_SPRINTING && !AnimUtils.isNotMoving(event)) {
             return event.setAndContinue(EEAnimations.SPRINT);
         }
+
+        if (getState() == STATE_SITTING) return event.setAndContinue(EEAnimations.SIT);
 
         return AnimUtils.idleWalkAnimation(event);
     }

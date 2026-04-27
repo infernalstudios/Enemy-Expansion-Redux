@@ -3649,7 +3649,21 @@
 					}
 				}
 			}
+		},
+		"sit": {
+			"loop": true,
+			"bones": {
+				"leftleg": {
+					"rotation": {
+						"vector": [-65.8513, -20.7048, -9.0072]
+					}
+				},
+				"rightleg": {
+					"rotation": {
+						"vector": [-65.8513, 20.7048, 9.0072]
+					}
+				}
+			}
 		}
-	},
-	"geckolib_format_version": 2
+	}
 }

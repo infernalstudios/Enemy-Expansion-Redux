@@ -9,7 +9,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -49,6 +48,7 @@ public class VampireEntity extends Monster implements GeoEntity {
     private static final EntityDataAccessor<Boolean> AWAKE = SynchedEntityData.defineId(VampireEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> AERIAL = SynchedEntityData.defineId(VampireEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> ANGRY = SynchedEntityData.defineId(VampireEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> SITING = SynchedEntityData.defineId(VampireEntity.class, EntityDataSerializers.BOOLEAN);
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private final PathNavigation groundNavigation;
     private final PathNavigation flyingNavigation;
@@ -85,6 +85,7 @@ public class VampireEntity extends Monster implements GeoEntity {
         this.entityData.define(AWAKE, false);
         this.entityData.define(AERIAL, false);
         this.entityData.define(ANGRY, false);
+        this.entityData.define(SITING, false);
     }
 
     @Override
@@ -139,6 +140,13 @@ public class VampireEntity extends Monster implements GeoEntity {
     public void tick() {
         super.tick();
         if (!this.level().isClientSide) {
+
+            if (getVehicle() != null && !isSiting()) {
+                setSitting(true);
+            } else if (getVehicle() == null && isSiting()) {
+                setSitting(false);
+            }
+
             if (this.getTarget() != null) {
                 if (!isAwake()) {
                     setAwake(true);
@@ -317,6 +325,14 @@ public class VampireEntity extends Monster implements GeoEntity {
         this.entityData.set(ANGRY, angry);
     }
 
+    public boolean isSiting() {
+        return this.entityData.get(SITING);
+    }
+
+    public void setSitting(boolean sitting) {
+        this.entityData.set(SITING, sitting);
+    }
+
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar data) {
         data.add(new AnimationController<>(this, "movement", 2, this::movementPredicate));
@@ -344,6 +360,8 @@ public class VampireEntity extends Monster implements GeoEntity {
     }
 
     private PlayState movementPredicate(AnimationState<?> event) {
+        if (isSiting()) return event.setAndContinue(EEAnimations.SIT);
+
         if (isAerial()) {
             if (event.isMoving()) return event.setAndContinue(EEAnimations.VAMPIRE_FLYING);
             return event.setAndContinue(EEAnimations.VAMPIRE_HOVER);

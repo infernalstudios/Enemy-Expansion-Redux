@@ -23,6 +23,7 @@ public class EquestrianChargeGoal extends ChargeAttackGoal<EquestrianEntity> {
     @Override
     public boolean canUse() {
         if (mob.getChargeTime() > 0) return true;
+        if (mob.getState() == EquestrianEntity.STATE_SITTING) return false;
 
         if (cooldown > 0) {
             cooldown--;

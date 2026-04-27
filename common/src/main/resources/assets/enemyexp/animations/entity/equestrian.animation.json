@@ -2503,6 +2503,83 @@
 					}
 				}
 			}
+		},
+		"sit": {
+			"loop": true,
+			"bones": {
+				"all": {
+					"rotation": {
+						"vector": [-45, 0, 0]
+					},
+					"position": {
+						"vector": [0, -1, -12]
+					}
+				},
+				"torso": {
+					"rotation": {
+						"vector": [45, 0, 0]
+					}
+				},
+				"zombiearmsboth": {
+					"rotation": {
+						"vector": [-45, 0, 0]
+					}
+				},
+				"neck": {
+					"rotation": {
+						"vector": [45, 0, 0]
+					}
+				},
+				"mouthsaddleright": {
+					"rotation": {
+						"vector": [-12.5, 0, 0]
+					}
+				},
+				"mouthsaddleleft": {
+					"rotation": {
+						"vector": [-12.5, 0, 0]
+					}
+				},
+				"horsetorso": {
+					"position": {
+						"vector": [0, 0, -2]
+					}
+				},
+				"legfrontleft": {
+					"rotation": {
+						"vector": [45, 0, 0]
+					}
+				},
+				"legfrontright": {
+					"rotation": {
+						"vector": [45, 0, 0]
+					}
+				},
+				"legbackleft": {
+					"rotation": {
+						"vector": [-45, 0, 0]
+					},
+					"position": {
+						"vector": [2, 5, 0]
+					}
+				},
+				"legbackright": {
+					"rotation": {
+						"vector": [-45, 0, 0]
+					},
+					"position": {
+						"vector": [-2, 5, 0]
+					}
+				},
+				"tail": {
+					"rotation": {
+						"vector": [90, 0, 0]
+					},
+					"position": {
+						"vector": [0, 0, -3]
+					}
+				}
+			}
 		}
 	}
 }
