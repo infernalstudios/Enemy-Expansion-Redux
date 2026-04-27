@@ -11,7 +11,7 @@ public final class EEAnimations {
     public static final RawAnimation SIT = RawAnimation.begin().thenLoop("sit");
 
     // Sprinter
-    public static final RawAnimation STAGGERED_USED = RawAnimation.begin().then("staggered_used", Animation.LoopType.PLAY_ONCE);
+    public static final RawAnimation STAGGERED_USED = RawAnimation.begin().then("staggered", Animation.LoopType.PLAY_ONCE);
 
     // Slugger
     public static final RawAnimation CHARGE = RawAnimation.begin().thenPlayAndHold("charge");

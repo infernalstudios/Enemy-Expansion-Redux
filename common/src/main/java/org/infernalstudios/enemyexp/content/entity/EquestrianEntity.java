@@ -5,6 +5,8 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -243,6 +245,21 @@ public class EquestrianEntity extends Zombie implements GeoEntity, IChargeable {
     }
 
     @Override
+    protected @NotNull SoundEvent getAmbientSound() {
+        return SoundEvents.ZOMBIE_HORSE_AMBIENT;
+    }
+
+    @Override
+    protected @NotNull SoundEvent getDeathSound() {
+        return SoundEvents.ZOMBIE_HORSE_DEATH;
+    }
+
+    @Override
+    protected @NotNull SoundEvent getHurtSound(@NotNull DamageSource damageSource) {
+        return SoundEvents.ZOMBIE_HORSE_HURT;
+    }
+
+    @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return cache;
     }
@@ -251,7 +268,7 @@ public class EquestrianEntity extends Zombie implements GeoEntity, IChargeable {
         private final EquestrianEntity equestrian;
 
         public EquestrianRangedKitingGoal(EquestrianEntity mob) {
-            super(mob, 1.1D);
+            super(mob, 0.9D);
             this.equestrian = mob;
         }
 

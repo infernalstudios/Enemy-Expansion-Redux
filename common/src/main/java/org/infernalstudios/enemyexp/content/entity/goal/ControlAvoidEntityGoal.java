@@ -18,4 +18,9 @@ public class ControlAvoidEntityGoal<T extends LivingEntity> extends AvoidEntityG
     public boolean canUse() {
         return shouldExecute.getAsBoolean() && super.canUse();
     }
+
+    @Override
+    public boolean canContinueToUse() {
+        return super.canContinueToUse() && shouldExecute.getAsBoolean();
+    }
 }

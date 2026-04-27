@@ -4,9 +4,12 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -25,10 +28,10 @@ import org.infernalstudios.enemyexp.EEMod;
 import org.infernalstudios.enemyexp.content.EEAnimations;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlAttackGoal;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlAvoidEntityGoal;
-import org.infernalstudios.enemyexp.content.entity.goal.ControlPanicGoal;
 import org.infernalstudios.enemyexp.content.entity.goal.EELeapAttackGoal;
 import org.infernalstudios.enemyexp.core.util.AnimUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.core.animation.AnimatableManager;
@@ -71,17 +74,16 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
     protected void registerGoals() {
         super.registerGoals();
         this.goalSelector.addGoal(1, new FloatGoal(this));
-        this.goalSelector.addGoal(1, new ControlAvoidEntityGoal<>(this, Player.class, 3.0F, 1.2D, 1.6D, () -> this.getState() == STATE_CONFIDENT));
-        this.goalSelector.addGoal(1, new ControlAvoidEntityGoal<>(this, AbstractVillager.class, 3.0F, 1.2D, 1.6D, () -> this.getState() == STATE_CONFIDENT));
+        this.goalSelector.addGoal(1, new ControlAvoidEntityGoal<>(this, Player.class, 16.0F, 1.2D, 1.3D, () -> this.getState() == STATE_CONFIDENT || this.getState() == STATE_PANIC));
+        this.goalSelector.addGoal(1, new ControlAvoidEntityGoal<>(this, AbstractVillager.class, 16.0F, 1.2D, 1.3D, () -> this.getState() == STATE_CONFIDENT || this.getState() == STATE_PANIC));
 
-        this.goalSelector.addGoal(2, new ControlPanicGoal(this, 1.4F, () -> this.getState() == STATE_PANIC && this.getState() != STATE_SITTING));
         this.goalSelector.addGoal(3, new EELeapAttackGoal<>(this, new GoblinThiefLeapCallbacks(this), MIN_TRIGGER_DISTANCE, MAX_TRIGGER_DISTANCE, COOLDOWN_TICKS, WINDUP_ENDS, ANIM_TOTAL){
             @Override
             public boolean canUse() {
                 return super.canUse() && getState() != STATE_LEAP && getState() != STATE_PANIC && getState() != STATE_CONFIDENT && getState() != STATE_SITTING;
             }
         });
-        this.goalSelector.addGoal(3, new ControlAttackGoal(this, 0.8D, true, () -> getState() != STATE_LEAP && getState() != STATE_PANIC && getState() != STATE_CONFIDENT && getState() != STATE_SITTING){
+        this.goalSelector.addGoal(4, new ControlAttackGoal(this, 1.0D, true, () -> getState() != STATE_LEAP && getState() != STATE_PANIC && getState() != STATE_CONFIDENT && getState() != STATE_SITTING){
             @Override
             public void start() {
                 super.start();
@@ -115,7 +117,7 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 30.0D)
                 .add(Attributes.ATTACK_DAMAGE, 6.0D)
-                .add(Attributes.MOVEMENT_SPEED, 0.39D)
+                .add(Attributes.MOVEMENT_SPEED, 0.23F)
                 .add(Attributes.FOLLOW_RANGE, 64.0D)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.1D);
     }
@@ -146,6 +148,7 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
         }
 
         if (result && getState() != STATE_CONFIDENT) {
+            if (entity instanceof LivingEntity living && living.isDeadOrDying()) return result;
             setState(STATE_CONFIDENT);
             EEMod.scheduleTask((ServerLevel) this.level(), CONFIDENT_TICKS, () -> {
                 if (this.isDeadOrDying()) return;
@@ -208,6 +211,20 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
 
     public void setState(int state) {
         this.entityData.set(STATE, state);
+    }
+
+    @Override
+    protected @Nullable SoundEvent getAmbientSound() {
+        return SoundEvents.WITCH_AMBIENT;
+    }
+
+    protected @NotNull SoundEvent getDeathSound() {
+        return SoundEvents.WITCH_DEATH;
+    }
+
+    @Override
+    protected @NotNull SoundEvent getHurtSound(@NotNull DamageSource damageSource) {
+        return SoundEvents.FOX_HURT;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package org.infernalstudios.enemyexp.content.entity.goal;
 
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.phys.Vec3;
@@ -66,6 +67,7 @@ public class EquestrianChargeGoal extends ChargeAttackGoal<EquestrianEntity> {
         @Override
         public void onWindupStart() {
             mob.setState(EquestrianEntity.STATE_CHARGING_GALLOP);
+            mob.playSound(SoundEvents.GOAT_HORN_SOUND_VARIANTS.get(0).value());
         }
 
         @Override

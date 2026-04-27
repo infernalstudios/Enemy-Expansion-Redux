@@ -81,7 +81,11 @@ public class SprinterEntity extends Zombie implements GeoEntity {
     public void tick() {
         super.tick();
 
-        setSitting(this.getVehicle() != null);
+        if (getVehicle() != null && !isSitting()) {
+            setSitting(true);
+        } else if (getVehicle() == null && isSitting()) {
+            setSitting(false);
+        }
     }
 
     @Override
@@ -94,7 +98,7 @@ public class SprinterEntity extends Zombie implements GeoEntity {
                 if (this.isDeadOrDying()) return;
                 this.setTexture(getNormalTexture());
                 ServerLevel serverLevel = (ServerLevel) this.level();
-                serverLevel.sendParticles(ParticleTypes.ANGRY_VILLAGER, this.getX(), this.getY() + 1, this.getZ(), 5, 1.0D, 1.0D, 1.0D, 0.6);
+                serverLevel.sendParticles(ParticleTypes.ANGRY_VILLAGER, this.getX(), this.getY() + 1.5, this.getZ(), 5, 0.5D, 0.5D, 0.5D, 0.6);
             });
         }
         return super.hurt(source, amount);

@@ -141,9 +141,9 @@ public class VampireEntity extends Monster implements GeoEntity {
         super.tick();
         if (!this.level().isClientSide) {
 
-            if (getVehicle() != null && !isSiting()) {
+            if (getVehicle() != null && !isSitting()) {
                 setSitting(true);
-            } else if (getVehicle() == null && isSiting()) {
+            } else if (getVehicle() == null && isSitting()) {
                 setSitting(false);
             }
 
@@ -325,7 +325,7 @@ public class VampireEntity extends Monster implements GeoEntity {
         this.entityData.set(ANGRY, angry);
     }
 
-    public boolean isSiting() {
+    public boolean isSitting() {
         return this.entityData.get(SITING);
     }
 
@@ -360,7 +360,7 @@ public class VampireEntity extends Monster implements GeoEntity {
     }
 
     private PlayState movementPredicate(AnimationState<?> event) {
-        if (isSiting()) return event.setAndContinue(EEAnimations.SIT);
+        if (isSitting()) return event.setAndContinue(EEAnimations.SIT);
 
         if (isAerial()) {
             if (event.isMoving()) return event.setAndContinue(EEAnimations.VAMPIRE_FLYING);
