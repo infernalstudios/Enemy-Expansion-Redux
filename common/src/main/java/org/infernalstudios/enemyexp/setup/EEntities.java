@@ -22,14 +22,14 @@ import java.util.function.BiConsumer;
 public final class EEntities {
     static Map<String, DeferredObject<EntityType<? extends Entity>>> entityTypes = new HashMap<>();
 
-    public static final DeferredObject<EntityType<SprinterEntity>> SPRINTER = entity(SprinterEntity::new, "sprinter", MobCategory.MONSTER, 0.6F, 1.95F);
-    public static final DeferredObject<EntityType<HaulEntity>> HAUL = entity(HaulEntity::new, "haul", MobCategory.MONSTER, 0.6F, 1.95F);
-    public static final DeferredObject<EntityType<SluggerEntity>> SLUGGER = entity(SluggerEntity::new, "slugger", MobCategory.MONSTER, 0.6F, 2.3F);
+    public static final DeferredObject<EntityType<SprinterEntity>> SPRINTER = entity(SprinterEntity::new, "sprinter", MobCategory.MONSTER, 0.6F, 2.4F);
+    public static final DeferredObject<EntityType<HaulEntity>> HAUL = entity(HaulEntity::new, "haul", MobCategory.MONSTER, 0.6F, 2.3F);
+    public static final DeferredObject<EntityType<SluggerEntity>> SLUGGER = entity(SluggerEntity::new, "slugger", MobCategory.MONSTER, 0.8F, 2.5F);
     public static final DeferredObject<EntityType<FrigidEntity>> FRIGID = entity(FrigidEntity::new, "frigid", MobCategory.MONSTER, 0.6F, 1F);
-    public static final DeferredObject<EntityType<MeatureEntity>> MEATURE = entity(MeatureEntity::new, "meature", MobCategory.MONSTER, 0.8F, 0.8F);
+    public static final DeferredObject<EntityType<MeatureEntity>> MEATURE = entity(MeatureEntity::new, "meature", MobCategory.MONSTER, 0.6F, 0.6F);
     public static final DeferredObject<EntityType<VampireEntity>> VAMPIRE = entity(VampireEntity::new, "vampire", MobCategory.MONSTER, 1.0F, 2.3F);
     public static final DeferredObject<EntityType<BiterEntity>> BITER = entity(BiterEntity::new, "biter", MobCategory.MONSTER, 0.4F, 0.8F);
-    public static final DeferredObject<EntityType<EquestrianEntity>> EQUESTRIAN = entity(EquestrianEntity::new, "equestrian", MobCategory.MONSTER, 0.6F, 1.4F);
+    public static final DeferredObject<EntityType<EquestrianEntity>> EQUESTRIAN = entity(EquestrianEntity::new, "equestrian", MobCategory.MONSTER, 1.4F, 2.5F);
     public static final DeferredObject<EntityType<GoblinThiefEntity>> GOBLIN_THIEF = entity(GoblinThiefEntity::new, "goblin_thief", MobCategory.MONSTER, 0.6F, 1.4F);
 
     private EEntities() {

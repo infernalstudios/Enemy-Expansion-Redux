@@ -3,8 +3,10 @@ package org.infernalstudios.enemyexp.content.entity;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobType;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Zombie;
@@ -33,7 +35,6 @@ public class FrigidEntity extends Zombie implements GeoEntity {
                 .add(Attributes.MOVEMENT_SPEED, 0.3D);
     }
 
-
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar data) {
         data.add(new AnimationController<>(this, "movement", 2, this::movementPredicate));
@@ -44,6 +45,11 @@ public class FrigidEntity extends Zombie implements GeoEntity {
             return event.setAndContinue(EEAnimations.SPRINT);
         }
         return AnimUtils.idleWalkAnimation(event);
+    }
+
+    @Override
+    protected float getStandingEyeHeight(@NotNull Pose pose, @NotNull EntityDimensions size) {
+        return 0.8F;
     }
 
     @Override

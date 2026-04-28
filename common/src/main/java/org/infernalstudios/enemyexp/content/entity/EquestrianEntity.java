@@ -8,7 +8,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -71,6 +73,11 @@ public class EquestrianEntity extends Zombie implements GeoEntity, IChargeable {
         this.entityData.define(CHARGE_TIME, 0);
         this.entityData.define(CHARGE_DIR_X, 0F);
         this.entityData.define(CHARGE_DIR_Z, 0F);
+    }
+
+    @Override
+    protected float getStandingEyeHeight(@NotNull Pose pose, @NotNull EntityDimensions size) {
+        return 2.2F;
     }
 
     @Override

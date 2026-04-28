@@ -4,8 +4,10 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.MoveThroughVillageGoal;
@@ -142,16 +144,24 @@ public class SluggerEntity extends Zombie implements GeoEntity, IChargeable {
     }
 
     @Override
-    public boolean hurt(DamageSource source, float amount) {
-        if (source.getEntity() instanceof Player player && !player.isCreative() && !isCharging() && !this.level().isClientSide && getState() != STATE_SITTING) {
-            Vec3 toPlayer = player.position().subtract(this.position()).normalize();
-            this.entityData.set(CHARGE_DIR_X, (float) toPlayer.x);
-            this.entityData.set(CHARGE_DIR_Z, (float) toPlayer.z);
+    protected float getStandingEyeHeight(@NotNull Pose pose, @NotNull EntityDimensions size) {
+        return 2.2F;
+    }
+
+    @Override
+    public boolean hurt(@NotNull DamageSource source, float amount) {
+        boolean result = super.hurt(source, amount);
+
+        if (source.getEntity() instanceof LivingEntity livingEntity && !isCharging() && !this.level().isClientSide && getState() != STATE_SITTING) {
+            Vec3 toEntity = livingEntity.position().subtract(this.position()).normalize();
+            if (livingEntity instanceof Player player && player.isCreative()) return result;
+            this.entityData.set(CHARGE_DIR_X, (float) toEntity.x);
+            this.entityData.set(CHARGE_DIR_Z, (float) toEntity.z);
             setState(STATE_CHARGING);
             setChargeTime(CHARGE_DURATION + CHARGE_WINDUP);
-            this.getLookControl().setLookAt(player, 30.0F, 30.0F);
+            this.getLookControl().setLookAt(livingEntity, 30.0F, 30.0F);
         }
-        return super.hurt(source, amount);
+        return result;
     }
 
     @Override
@@ -225,6 +235,11 @@ public class SluggerEntity extends Zombie implements GeoEntity, IChargeable {
 
     @Override
     public void setBaby(boolean childZombie) {
+    }
+
+    @Override
+    public float maxUpStep() {
+        return 1F;
     }
 
     @Override

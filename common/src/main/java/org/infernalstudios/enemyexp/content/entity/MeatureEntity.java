@@ -1,9 +1,14 @@
 package org.infernalstudios.enemyexp.content.entity;
 
+import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementProgress;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
@@ -70,7 +75,7 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new FloatGoal(this));
-        this.goalSelector.addGoal(2, new EELeapAttackGoal<>(this, new MeatureLeapCallbacks(this), MIN_TRIGGER_DISTANCE, MAX_TRIGGER_DISTANCE, COOLDOWN_TICKS, WINDUP_ENDS, ANIM_TOTAL_TICKS){
+        this.goalSelector.addGoal(2, new EELeapAttackGoal<>(this, new MeatureLeapCallbacks(this), MIN_TRIGGER_DISTANCE, MAX_TRIGGER_DISTANCE, COOLDOWN_TICKS, WINDUP_ENDS, ANIM_TOTAL_TICKS) {
             @Override
             public boolean canUse() {
                 if (getMob().getTarget() != null) {
@@ -100,9 +105,18 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
             if (getOwnerUUID() == null) {
                 if (this.level() instanceof ServerLevel serverLevel) {
                     ExperienceOrb.award(serverLevel, this.position(), 10);
+                    grantTameAdvancement(player);
+                }
+
+                for(int i = 0; i < 4; ++i) {
+                    double d0 = this.random.nextGaussian() * 0.02;
+                    double d1 = this.random.nextGaussian() * 0.02;
+                    double d2 = this.random.nextGaussian() * 0.02;
+                    this.level().addParticle(ParticleTypes.HEART, this.getRandomX(1.0D), this.getRandomY() + 0.5D, this.getRandomZ(1.0D), d0, d1, d2);
                 }
                 setOwnerUUID(player.getUUID());
             }
+            playSound(SoundEvents.GENERIC_EAT, 1.0F, 1.0F);
             if (!this.level().isClientSide) {
                 grow();
                 if (!player.getAbilities().instabuild) itemstack.shrink(1);
@@ -111,6 +125,18 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
             return InteractionResult.sidedSuccess(this.level().isClientSide);
         }
         return super.mobInteract(player, hand);
+    }
+
+    @Override
+    public float getScale() {
+        if (getAge() <= 0) return super.getScale();
+        return 1.0F + (getAge() * 0.05F);
+    }
+
+    @Override
+    public void onSyncedDataUpdated(@NotNull EntityDataAccessor<?> key) {
+        this.refreshDimensions();
+        super.onSyncedDataUpdated(key);
     }
 
     @Override
@@ -148,6 +174,21 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
             double newMaxHealth = 10.0D + (currentAge + 1) * HEALTH_PER_AGE;
             this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(newMaxHealth);
             this.setHealth((float) newMaxHealth);
+        }
+    }
+
+    private void grantTameAdvancement(Player p) {
+        if (!(p instanceof ServerPlayer serverPlayer)) return;
+
+        ResourceLocation location = ResourceLocation.tryParse("minecraft:husbandry/tame_an_animal");
+        if (location == null) return;
+        Advancement advancement = p.getServer().getAdvancements().getAdvancement(location);
+        if (advancement == null) return;
+        AdvancementProgress progress = serverPlayer.getAdvancements().getOrStartProgress(advancement);
+        if  (progress.isDone()) return;
+
+        for(String s : progress.getRemainingCriteria()) {
+            serverPlayer.getAdvancements().award(advancement, s);
         }
     }
 
@@ -236,6 +277,11 @@ public class MeatureEntity extends Zombie implements GeoEntity, OwnableEntity {
 
     public void setOwnerUUID(@Nullable UUID uuid) {
         this.entityData.set(OWNER_UUID, Optional.ofNullable(uuid));
+    }
+
+    @Override
+    protected float getStandingEyeHeight(@NotNull Pose pose, @NotNull EntityDimensions size) {
+        return 0.4F;
     }
 
     public int getAge() {

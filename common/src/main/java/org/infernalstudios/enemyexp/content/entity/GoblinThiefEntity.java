@@ -80,10 +80,10 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
         this.goalSelector.addGoal(3, new EELeapAttackGoal<>(this, new GoblinThiefLeapCallbacks(this), MIN_TRIGGER_DISTANCE, MAX_TRIGGER_DISTANCE, COOLDOWN_TICKS, WINDUP_ENDS, ANIM_TOTAL){
             @Override
             public boolean canUse() {
-                return super.canUse() && getState() != STATE_LEAP && getState() != STATE_PANIC && getState() != STATE_CONFIDENT && getState() != STATE_SITTING;
+                return super.canUse() &&  notInSpecialState();
             }
         });
-        this.goalSelector.addGoal(4, new ControlAttackGoal(this, 1.0D, true, () -> getState() != STATE_LEAP && getState() != STATE_PANIC && getState() != STATE_CONFIDENT && getState() != STATE_SITTING){
+        this.goalSelector.addGoal(4, new ControlAttackGoal(this, 1.0D, true, this::notInSpecialState){
             @Override
             public void start() {
                 super.start();
@@ -117,7 +117,7 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 30.0D)
                 .add(Attributes.ATTACK_DAMAGE, 6.0D)
-                .add(Attributes.MOVEMENT_SPEED, 0.23F)
+                .add(Attributes.MOVEMENT_SPEED, 0.33F)
                 .add(Attributes.FOLLOW_RANGE, 64.0D)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.1D);
     }
@@ -142,6 +142,7 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
 
         if (entity instanceof Player player) {
             if (player.totalExperience >= 20) {
+                playSound(SoundEvents.ARROW_HIT_PLAYER, 1.0F, 0);
                 xpReward += 20;
                 player.giveExperiencePoints(-20);
             }
@@ -205,6 +206,10 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
         return PlayState.STOP;
     }
 
+    public boolean notInSpecialState() {
+        return getState() != STATE_LEAP && getState() != STATE_PANIC && getState() != STATE_CONFIDENT && getState() != STATE_SITTING;
+    }
+
     public int getState() {
         return this.entityData.get(STATE);
     }
@@ -246,7 +251,7 @@ public class GoblinThiefEntity extends Monster implements GeoEntity {
 
         @Override
         public void onLeapStart() {
-
+            entity.playSound(SoundEvents.SNOWBALL_THROW, 1.0F, 0.8F);
         }
 
         @Override
