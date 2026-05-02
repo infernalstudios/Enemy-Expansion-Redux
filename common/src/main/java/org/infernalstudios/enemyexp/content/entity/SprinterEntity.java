@@ -42,6 +42,8 @@ import java.util.Objects;
 public class SprinterEntity extends Zombie implements GeoEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
+    private static final EntityDataAccessor<Boolean> STAGGER = SynchedEntityData.defineId(SprinterEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Integer> STAGGER_TICKS = SynchedEntityData.defineId(SprinterEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<String> TEXTURE = SynchedEntityData.defineId(SprinterEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<Boolean> SIT = SynchedEntityData.defineId(SprinterEntity.class, EntityDataSerializers.BOOLEAN);
 
@@ -75,6 +77,8 @@ public class SprinterEntity extends Zombie implements GeoEntity {
         super.defineSynchedData();
         this.entityData.define(TEXTURE, getNormalTexture());
         this.entityData.define(SIT, false);
+        this.entityData.define(STAGGER, false);
+        this.entityData.define(STAGGER_TICKS, 0);
     }
 
     @Override
@@ -86,17 +90,25 @@ public class SprinterEntity extends Zombie implements GeoEntity {
         } else if (getVehicle() == null && isSitting()) {
             setSitting(false);
         }
+
+        if (entityData.get(STAGGER_TICKS) != 0) {
+            entityData.set(STAGGER_TICKS, entityData.get(STAGGER_TICKS) - 1);
+        }
     }
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
         if (source.getEntity() instanceof Player player && !player.getAbilities().instabuild && !this.level().isClientSide && !isSitting()) {
             this.setTexture(getStaggeredTexture());
-            triggerAnim("staggered_used", "staggered_used");
+            this.entityData.set(STAGGER, true);
+            this.entityData.set(STAGGER_TICKS, STAGGER_RECOVERY_TICKS);
             this.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, STAGGER_RECOVERY_TICKS, 1, false, false, false));
             EEMod.scheduleTask((ServerLevel) this.level(), STAGGER_RECOVERY_TICKS, () -> {
                 if (this.isDeadOrDying()) return;
+                if  (this.entityData.get(STAGGER_TICKS) >= 1) return;
                 this.setTexture(getNormalTexture());
+                this.entityData.set(STAGGER, false);
+                this.entityData.set(STAGGER_TICKS, 0);
                 ServerLevel serverLevel = (ServerLevel) this.level();
                 serverLevel.sendParticles(ParticleTypes.ANGRY_VILLAGER, this.getX(), this.getY() + 1.5, this.getZ(), 5, 0.5D, 0.5D, 0.5D, 0.6);
             });
@@ -107,12 +119,17 @@ public class SprinterEntity extends Zombie implements GeoEntity {
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar data) {
         data.add(new AnimationController<>(this, "movement", 2, this::movementPredicate));
-        data.add(new AnimationController<>(this, "staggered_used", state -> PlayState.STOP)
-                .triggerableAnim("staggered_used", EEAnimations.STAGGERED_USED));
     }
 
     private PlayState movementPredicate(AnimationState<?> event) {
         if (isSitting()) return event.setAndContinue(EEAnimations.SIT);
+
+        if (this.entityData.get(STAGGER)) {
+            if (this.entityData.get(STAGGER_TICKS) == STAGGER_RECOVERY_TICKS) {
+                event.resetCurrentAnimation();
+            }
+            return event.setAndContinue(EEAnimations.STAGGERED_USED);
+        }
 
         return AnimUtils.idleWalkAnimation(event, EEAnimations.IDLE, EEAnimations.SPRINT);
     }
