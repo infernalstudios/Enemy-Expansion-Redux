@@ -1,11 +1,11 @@
 package org.infernalstudios.enemyexp.content.entity;
 
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -32,6 +32,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.infernalstudios.enemyexp.content.EEAnimations;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlAttackGoal;
+import org.infernalstudios.enemyexp.content.entity.goal.HardLookAtTargetGoal;
 import org.infernalstudios.enemyexp.core.util.AnimUtils;
 import org.infernalstudios.enemyexp.setup.EEMobEffects;
 import org.infernalstudios.enemyexp.setup.EEntities;
@@ -91,7 +92,13 @@ public class VampireEntity extends Monster implements GeoEntity {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new AvoidEntityGoal<>(this, IronGolem.class, 8.0F, 1.2D, 1.5D));
-        this.goalSelector.addGoal(2, new ControlAttackGoal(this, 1.2D, false, () -> this.alertTicks <= 0));
+        this.goalSelector.addGoal(2, new ControlAttackGoal(this, 1.2D, false, () -> this.alertTicks <= 0){
+            @Override
+            protected double getAttackReachSqr(@NotNull LivingEntity attackTarget) {
+                // 70% reach
+                return super.getAttackReachSqr(attackTarget) * 0.7;
+            }
+        });
         this.goalSelector.addGoal(3, new WaterAvoidingRandomFlyingGoal(this, 1.0D) {
             @Override
             public boolean canUse() {
@@ -106,7 +113,7 @@ public class VampireEntity extends Monster implements GeoEntity {
             }
         });
 
-        this.goalSelector.addGoal(4, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        this.goalSelector.addGoal(3, new HardLookAtTargetGoal(this, 10.0F, 10.0F));
         this.goalSelector.addGoal(5, new RandomLookAroundGoal(this));
 
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
@@ -139,110 +146,88 @@ public class VampireEntity extends Monster implements GeoEntity {
     @Override
     public void tick() {
         super.tick();
-        if (!this.level().isClientSide) {
+        if (this.level().isClientSide) return;
 
-            if (getVehicle() != null && !isSitting()) {
-                setSitting(true);
-            } else if (getVehicle() == null && isSitting()) {
-                setSitting(false);
+        if (getVehicle() != null && !isSitting()) setSitting(true);
+        else if (getVehicle() == null && isSitting()) setSitting(false);
+
+        if (this.getTarget() != null) {
+            // in case the target is 3 blocks of distance on y, the vampire will fly. This checks every 2 seconds
+            if (this.getTarget().getY() > this.getY() + 3.0D && !isAerial() && this.level().getGameTime() % 40 == 0) {
+                setAerial(true);
             }
 
-            if (this.getTarget() != null) {
-                if (!isAwake()) {
-                    setAwake(true);
-                    setAngry(true);
-                    alertTicks = 20;
-                    triggerAnim("alert", "alert");
-                    this.playSound(SoundEvents.WARDEN_ROAR, 1.0F, 1.0F);
-                }
-                ticksSinceInteraction = 0;
-            } else if (isAwake()) {
-                ticksSinceInteraction++;
-                if (ticksSinceInteraction >= 6000) {
-                    setAwake(false);
-                    setAngry(false);
-                    ticksSinceInteraction = 0;
-                }
+            if (!isAwake()) {
+                setAwake(true);
+                setAngry(true);
+                alertTicks = 20;
+                triggerAnim("alert", "alert");
+                this.playSound(SoundEvents.WARDEN_ROAR, 1.0F, 1.0F);
             }
-
-            if (alertTicks > 0) {
-                alertTicks--;
-            } else if (isAngry() && !this.isAggressive()) {
+            ticksSinceInteraction = 0;
+        } else if (isAwake()) {
+            ticksSinceInteraction++;
+            if (ticksSinceInteraction >= 6000) {
+                setAwake(false);
                 setAngry(false);
-            }
-
-            if (dodgeTicks > 0) dodgeTicks--;
-
-            if (!isAerial() && this.getTarget() != null && this.tickCount % 20 == 0) {
-                boolean targetHigher = this.getTarget().getY() > this.getY() + 2.0D;
-                boolean noPath = !this.getNavigation().isInProgress() || this.getNavigation().isStuck();
-
-                if (targetHigher && noPath) {
-                    setAerial(true);
-                }
+                ticksSinceInteraction = 0;
             }
         }
-    }
 
-    @Override
-    public void addAdditionalSaveData(@NotNull CompoundTag compound) {
-        super.addAdditionalSaveData(compound);
-        compound.putBoolean("Awake", this.isAwake());
-        compound.putBoolean("Aerial", this.isAerial());
-        compound.putBoolean("Angry", this.isAngry());
-        compound.putInt("AlertTicks", this.alertTicks);
-    }
+        if (alertTicks > 0) {
+            alertTicks--;
+        } else if (isAngry() && !this.isAggressive()) {
+            setAngry(false);
+        }
 
-    @Override
-    public void readAdditionalSaveData(@NotNull CompoundTag compound) {
-        super.readAdditionalSaveData(compound);
-        if (compound.contains("Awake")) this.setAwake(compound.getBoolean("Awake"));
-        if (compound.contains("Aerial")) this.setAerial(compound.getBoolean("Aerial"));
-        if (compound.contains("Angry")) this.setAngry(compound.getBoolean("Angry"));
-        if (compound.contains("AlertTicks")) this.alertTicks = compound.getInt("AlertTicks");
+        if (dodgeTicks > 0) dodgeTicks--;
+
+        if (!isAerial() && this.getTarget() != null && this.tickCount % 20 == 0) {
+            boolean targetHigher = this.getTarget().getY() > this.getY() + 2.0D;
+            boolean noPath = !this.getNavigation().isInProgress() || this.getNavigation().isStuck();
+
+            if (targetHigher && noPath) {
+                setAerial(true);
+            }
+        }
     }
 
     @Override
     public boolean hurt(@NotNull DamageSource source, float amount) {
-        if (this.level().isClientSide || source.getEntity() == null) {
-            return super.hurt(source, amount);
-        }
-
         boolean hurt = super.hurt(source, amount);
 
-        if (hurt) {
-            if (!isAwake()) {
-                setAwake(true);
-                alertTicks = 20;
-                setAngry(true);
-            }
-            ticksSinceInteraction = 0;
+        if (this.level().isClientSide || !(source.getEntity() instanceof LivingEntity)) return hurt;
+        if (!hurt) return false;
 
-            if (this.getHealth() > 0 && !isAerial() && source.getEntity() instanceof LivingEntity) {
-                float rand = this.random.nextFloat();
+        if (!isAwake()) {
+            setAwake(true);
+            alertTicks = 20;
+            setAngry(true);
+        }
+        ticksSinceInteraction = 0;
 
-                if (rand < 0.20f) {
-                    Vec3 dashDir = source.getEntity().position().subtract(this.position()).normalize();
-                    this.setDeltaMovement(dashDir.x * 1.5, 0.3, dashDir.z * 1.5);
-                    dodgeTicks = 15;
-                    triggerAnim("dodge", "dodge_forward");
-                } else if (rand < 0.40f) {
-                    Vec3 retreatDir = this.position().subtract(source.getEntity().position()).normalize();
-                    this.setDeltaMovement(retreatDir.x * 1.5, 0.3, retreatDir.z * 1.5);
-                    dodgeTicks = 15;
-                    triggerAnim("dodge", "dodge_back");
-                }
-            }
+        if (!this.isDeadOrDying() && !isAerial()) {
+            float rand = this.random.nextFloat();
 
-            if (this.random.nextFloat() < 0.25f) {
-                setAerial(!isAerial());
-            }
-
-            if (this.getHealth() > 0) {
-                triggerAnim("hurt", "hurt_flying");
+            if (rand < 0.20f) {
+                Vec3 dashDir = source.getEntity().position().subtract(this.position()).normalize();
+                this.setDeltaMovement(dashDir.x * 1.5, 0.3, dashDir.z * 1.5);
+                dodgeTicks = 15;
+                triggerAnim("dodge", "dodge_forward");
+            } else if (rand < 0.40f) {
+                Vec3 retreatDir = this.position().subtract(source.getEntity().position()).normalize();
+                this.setDeltaMovement(retreatDir.x * 1.5, 0.3, retreatDir.z * 1.5);
+                dodgeTicks = 15;
+                triggerAnim("dodge", "dodge_back");
             }
         }
-        return hurt;
+
+        if (this.random.nextFloat() < 0.25f && !this.isDeadOrDying()) {
+            setAerial(!isAerial());
+        }
+
+        if (this.getHealth() > 0) triggerAnim("hurt", "hurt_flying");
+        return true;
     }
 
     @Override
@@ -291,7 +276,7 @@ public class VampireEntity extends Monster implements GeoEntity {
                 if (biter != null) {
                     double yaw = Math.toRadians(this.getYRot());
                     double spawnX = this.getX() - Math.sin(yaw);
-                    double spawnY = this.getY() + 0.1;
+                    double spawnY = this.getY() + 1.5;
                     double spawnZ = this.getZ() + Math.cos(yaw);
 
                     biter.moveTo(spawnX, spawnY, spawnZ, this.getYRot(), this.getXRot());
@@ -414,6 +399,21 @@ public class VampireEntity extends Monster implements GeoEntity {
         }
 
         return super.causeFallDamage(fallDistance, multiplier, source);
+    }
+
+    @Override
+    protected SoundEvent getAmbientSound() {
+        return SoundEvents.PHANTOM_AMBIENT;
+    }
+
+    @Override
+    protected @NotNull SoundEvent getHurtSound(@NotNull DamageSource damageSource) {
+        return SoundEvents.PHANTOM_HURT;
+    }
+
+    @Override
+    protected @NotNull SoundEvent getDeathSound() {
+        return SoundEvents.PHANTOM_DEATH;
     }
 
     @Override
