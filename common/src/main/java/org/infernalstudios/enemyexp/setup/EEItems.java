@@ -6,6 +6,9 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SpawnEggItem;
 import org.infernalstudios.enemyexp.EEMod;
+import org.infernalstudios.enemyexp.content.item.HeadBiterArmor;
+import org.infernalstudios.enemyexp.content.item.HorseHeadArmor;
+import org.infernalstudios.enemyexp.content.item.MeatheadArmor;
 import org.infernalstudios.enemyexp.content.item.VampearItem;
 import org.infernalstudios.enemyexp.core.DeferredObject;
 import org.infernalstudios.enemyexp.core.RegisterFunction;
@@ -28,7 +31,9 @@ public final class EEItems {
     public static final DeferredObject<Item> EQUESTRIAN_SPAWN_EGG = spawnEgg("equestrian_spawn_egg", EEntities.EQUESTRIAN.get(), 0xbedac3, 0xa8cab6);
     public static final DeferredObject<Item> GOBLIN_THIEF_SPAWN_EGG = spawnEgg("goblin_thief_spawn_egg", EEntities.GOBLIN_THIEF.get(), 0x2d5e69, 0x364151);
     public static final DeferredObject<Item> VAMPEAR = item("vampear", () -> new VampearItem(new Item.Properties()), true, true);
-
+    public static final DeferredObject<Item> MEATHEAD = item("meathead", MeatheadArmor::new, true, true);
+    public static final DeferredObject<Item> HORSEHEAD = item("horsehead", HorseHeadArmor::new, true, true);
+    public static final DeferredObject<Item> HEADBITER = item("headbiter", HeadBiterArmor::new, true, true);
     private EEItems() {
         // Prevent instantiation, why would you even want to? :p
     }
