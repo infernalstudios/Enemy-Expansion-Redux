@@ -1,6 +1,7 @@
 package org.infernalstudios.enemyexp.content.entity;
 
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -56,7 +57,6 @@ public class VampireEntity extends Monster implements GeoEntity {
     private final MoveControl groundMoveControl;
     private final MoveControl flyingMoveControl;
     private int ticksSinceInteraction = 0;
-    private int dodgeTicks = 0;
     private int alertTicks = 0;
     private boolean spawningBiter = false;
 
@@ -73,10 +73,10 @@ public class VampireEntity extends Monster implements GeoEntity {
 
     public static AttributeSupplier.@NotNull Builder createAttributes() {
         return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 20.0D)
+                .add(Attributes.MAX_HEALTH, 30.0D)
                 .add(Attributes.ATTACK_DAMAGE, 4.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.35D)
-                .add(Attributes.FLYING_SPEED, 0.6D)
+                .add(Attributes.FLYING_SPEED, 0.7D)
                 .add(Attributes.FOLLOW_RANGE, 64.0D);
     }
 
@@ -92,11 +92,11 @@ public class VampireEntity extends Monster implements GeoEntity {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new AvoidEntityGoal<>(this, IronGolem.class, 8.0F, 1.2D, 1.5D));
-        this.goalSelector.addGoal(2, new ControlAttackGoal(this, 1.2D, false, () -> this.alertTicks <= 0){
+        this.goalSelector.addGoal(2, new ControlAttackGoal(this, 1.0D, false, () -> this.alertTicks <= 0){
             @Override
             protected double getAttackReachSqr(@NotNull LivingEntity attackTarget) {
-                // 70% reach
-                return super.getAttackReachSqr(attackTarget) * 0.7;
+                // 50% reach
+                return super.getAttackReachSqr(attackTarget) * 0.5;
             }
         });
         this.goalSelector.addGoal(3, new WaterAvoidingRandomFlyingGoal(this, 1.0D) {
@@ -151,6 +151,16 @@ public class VampireEntity extends Monster implements GeoEntity {
         if (getVehicle() != null && !isSitting()) setSitting(true);
         else if (getVehicle() == null && isSitting()) setSitting(false);
 
+        if (this.tickCount % 20 == 0 && this.isInWater()) {
+            if (!this.isAerial()) {
+                this.setDeltaMovement(this.getDeltaMovement().add(0, 0.5, 0));
+                setAerial(true);
+            } else {
+                this.setDeltaMovement(this.getDeltaMovement().add(0, 0.1, 0));
+            }
+        }
+
+
         if (this.getTarget() != null) {
             // in case the target is 3 blocks of distance on y, the vampire will fly. This checks every 2 seconds
             if (this.getTarget().getY() > this.getY() + 3.0D && !isAerial() && this.level().getGameTime() % 40 == 0) {
@@ -180,8 +190,6 @@ public class VampireEntity extends Monster implements GeoEntity {
             setAngry(false);
         }
 
-        if (dodgeTicks > 0) dodgeTicks--;
-
         if (!isAerial() && this.getTarget() != null && this.tickCount % 20 == 0) {
             boolean targetHigher = this.getTarget().getY() > this.getY() + 2.0D;
             boolean noPath = !this.getNavigation().isInProgress() || this.getNavigation().isStuck();
@@ -206,22 +214,6 @@ public class VampireEntity extends Monster implements GeoEntity {
         }
         ticksSinceInteraction = 0;
 
-        if (!this.isDeadOrDying() && !isAerial()) {
-            float rand = this.random.nextFloat();
-
-            if (rand < 0.20f) {
-                Vec3 dashDir = source.getEntity().position().subtract(this.position()).normalize();
-                this.setDeltaMovement(dashDir.x * 1.5, 0.3, dashDir.z * 1.5);
-                dodgeTicks = 15;
-                triggerAnim("dodge", "dodge_forward");
-            } else if (rand < 0.40f) {
-                Vec3 retreatDir = this.position().subtract(source.getEntity().position()).normalize();
-                this.setDeltaMovement(retreatDir.x * 1.5, 0.3, retreatDir.z * 1.5);
-                dodgeTicks = 15;
-                triggerAnim("dodge", "dodge_back");
-            }
-        }
-
         if (this.random.nextFloat() < 0.25f && !this.isDeadOrDying()) {
             setAerial(!isAerial());
         }
@@ -232,8 +224,6 @@ public class VampireEntity extends Monster implements GeoEntity {
 
     @Override
     public boolean doHurtTarget(@NotNull Entity entity) {
-        if (dodgeTicks > 0) return false;
-
         boolean hurt = super.doHurtTarget(entity);
         if (hurt && entity instanceof LivingEntity livingTarget) {
             this.heal(6.0F);
@@ -399,6 +389,24 @@ public class VampireEntity extends Monster implements GeoEntity {
         }
 
         return super.causeFallDamage(fallDistance, multiplier, source);
+    }
+
+    @Override
+    public void addAdditionalSaveData(@NotNull CompoundTag compound) {
+        super.addAdditionalSaveData(compound);
+        compound.putBoolean("Awake", this.isAwake());
+        compound.putBoolean("Aerial", this.isAerial());
+        compound.putBoolean("Angry", this.isAngry());
+        compound.putInt("AlertTicks", this.alertTicks);
+    }
+
+    @Override
+    public void readAdditionalSaveData(@NotNull CompoundTag compound) {
+        super.readAdditionalSaveData(compound);
+        if (compound.contains("Awake")) this.setAwake(compound.getBoolean("Awake"));
+        if (compound.contains("Aerial")) this.setAerial(compound.getBoolean("Aerial"));
+        if (compound.contains("Angry")) this.setAngry(compound.getBoolean("Angry"));
+        if (compound.contains("AlertTicks")) this.alertTicks = compound.getInt("AlertTicks");
     }
 
     @Override

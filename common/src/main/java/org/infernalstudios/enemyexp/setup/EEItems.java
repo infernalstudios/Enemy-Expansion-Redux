@@ -31,9 +31,9 @@ public final class EEItems {
     public static final DeferredObject<Item> EQUESTRIAN_SPAWN_EGG = spawnEgg("equestrian_spawn_egg", EEntities.EQUESTRIAN.get(), 0xbedac3, 0xa8cab6);
     public static final DeferredObject<Item> GOBLIN_THIEF_SPAWN_EGG = spawnEgg("goblin_thief_spawn_egg", EEntities.GOBLIN_THIEF.get(), 0x2d5e69, 0x364151);
     public static final DeferredObject<Item> VAMPEAR = item("vampear", () -> new VampearItem(new Item.Properties()), true, true);
-    public static final DeferredObject<Item> MEATHEAD = item("meathead", MeatheadArmor::new, true, true);
-    public static final DeferredObject<Item> HORSEHEAD = item("horsehead", HorseHeadArmor::new, true, true);
-    public static final DeferredObject<Item> HEADBITER = item("headbiter", HeadBiterArmor::new, true, true);
+    public static final DeferredObject<Item> MEATHEAD = armor("meathead", MeatheadArmor::new);
+    public static final DeferredObject<Item> HORSEHEAD = armor("horsehead", HorseHeadArmor::new);
+    public static final DeferredObject<Item> HEADBITER = armor("headbiter", HeadBiterArmor::new);
     private EEItems() {
         // Prevent instantiation, why would you even want to? :p
     }
@@ -56,6 +56,12 @@ public final class EEItems {
     static DeferredObject<Item> spawnEgg(String name, EntityType<? extends Mob> entityType, int primaryColor, int secondaryColor) {
         DeferredObject<Item> ret = item(name, () -> new SpawnEggItem(entityType, primaryColor, secondaryColor, new Item.Properties()), false, false);
         EECreativeTabs.addSpawnEgg(ret);
+        return ret;
+    }
+
+    static <T extends Item> DeferredObject<T> armor(String name, Supplier<T> itemSupplier) {
+        var ret = item(name, itemSupplier, true, false);
+        EECreativeTabs.addEquipment(ret);
         return ret;
     }
 

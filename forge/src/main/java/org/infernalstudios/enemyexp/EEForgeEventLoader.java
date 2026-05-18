@@ -49,6 +49,10 @@ public class EEForgeEventLoader {
             if (event.getTabKey() == CreativeModeTabs.SPAWN_EGGS) {
                 EECreativeTabs.getSpawnEggs().forEach(item -> event.accept(item.get()));
             }
+
+            if (event.getTabKey() == CreativeModeTabs.COMBAT) {
+                EECreativeTabs.getEquipment().forEach(item -> event.accept(item.get()));
+            }
         }
     }
 }

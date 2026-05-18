@@ -33,6 +33,12 @@ public class EEModFabric implements ModInitializer {
             }
         });
 
+        ItemGroupEvents.MODIFY_ENTRIES_ALL.register((itemGroup, entries) -> {
+            if (itemGroup == BuiltInRegistries.CREATIVE_MODE_TAB.get(CreativeModeTabs.COMBAT)) {
+                EECreativeTabs.getEquipment().forEach(item -> entries.accept(item.get()));
+            }
+        });
+
         BiomeModifications.addSpawn(BiomeSelectors.tag(ConventionalBiomeTags.PLAINS)
                         .or(BiomeSelectors.tag(ConventionalBiomeTags.DESERT)),
                 MobCategory.MONSTER, EEntities.EQUESTRIAN.get(), 25, 1, 1);

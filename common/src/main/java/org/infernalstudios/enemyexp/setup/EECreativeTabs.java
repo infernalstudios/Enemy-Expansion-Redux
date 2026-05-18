@@ -10,6 +10,7 @@ public final class EECreativeTabs {
     private static final Set<DeferredObject<? extends Item>> GENERAL_ITEMS = new HashSet<>();
 
     private static final Set<DeferredObject<? extends Item>> SPAWN_EGGS = new HashSet<>();
+    private static final Set<DeferredObject<? extends Item>> EQUIPMENT = new HashSet<>();
 
     private EECreativeTabs() {
     }
@@ -22,11 +23,19 @@ public final class EECreativeTabs {
         SPAWN_EGGS.add(item);
     }
 
+    public static void addEquipment(DeferredObject<? extends Item> item) {
+        EQUIPMENT.add(item);
+    }
+
     public static Set<DeferredObject<? extends Item>> getGeneralItems() {
         return GENERAL_ITEMS;
     }
 
     public static Set<DeferredObject<? extends Item>> getSpawnEggs() {
         return SPAWN_EGGS;
+    }
+
+    public static Set<DeferredObject<? extends Item>> getEquipment() {
+        return EQUIPMENT;
     }
 }
