@@ -14,6 +14,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobType;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.control.FlyingMoveControl;
@@ -30,7 +31,6 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
 import org.infernalstudios.enemyexp.content.EEAnimations;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlAttackGoal;
 import org.infernalstudios.enemyexp.content.entity.goal.HardLookAtTargetGoal;
@@ -46,11 +46,14 @@ import software.bernie.geckolib.core.animation.AnimationState;
 import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
+import java.util.UUID;
+
 public class VampireEntity extends Monster implements GeoEntity {
     private static final EntityDataAccessor<Boolean> AWAKE = SynchedEntityData.defineId(VampireEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> AERIAL = SynchedEntityData.defineId(VampireEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> ANGRY = SynchedEntityData.defineId(VampireEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> SITING = SynchedEntityData.defineId(VampireEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final UUID FLYING_SPEED_MODIFIER = UUID.fromString("bac26f76-fa57-4c72-b0e2-a26c8de7e2a4");
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private final PathNavigation groundNavigation;
     private final PathNavigation flyingNavigation;
@@ -75,7 +78,7 @@ public class VampireEntity extends Monster implements GeoEntity {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 30.0D)
                 .add(Attributes.ATTACK_DAMAGE, 4.0D)
-                .add(Attributes.MOVEMENT_SPEED, 0.35D)
+                .add(Attributes.MOVEMENT_SPEED, 0.45D)
                 .add(Attributes.FLYING_SPEED, 0.7D)
                 .add(Attributes.FOLLOW_RANGE, 64.0D);
     }
@@ -150,6 +153,16 @@ public class VampireEntity extends Monster implements GeoEntity {
 
         if (getVehicle() != null && !isSitting()) setSitting(true);
         else if (getVehicle() == null && isSitting()) setSitting(false);
+
+        AttributeModifier flyingSpeed = new AttributeModifier(FLYING_SPEED_MODIFIER, "Vampire Flying Speed", 0.2, AttributeModifier.Operation.ADDITION);
+
+        if (isAerial()) {
+            if (!this.getAttribute(Attributes.MOVEMENT_SPEED).hasModifier(flyingSpeed)) this.getAttribute(Attributes.MOVEMENT_SPEED).addTransientModifier(flyingSpeed);
+            if (!this.getAttribute(Attributes.FLYING_SPEED).hasModifier(flyingSpeed)) this.getAttribute(Attributes.FLYING_SPEED).addTransientModifier(flyingSpeed);
+        } else {
+            if (this.getAttribute(Attributes.MOVEMENT_SPEED).hasModifier(flyingSpeed)) this.getAttribute(Attributes.MOVEMENT_SPEED).removeModifier(FLYING_SPEED_MODIFIER);
+            if (this.getAttribute(Attributes.FLYING_SPEED).hasModifier(flyingSpeed)) this.getAttribute(Attributes.FLYING_SPEED).removeModifier(FLYING_SPEED_MODIFIER);
+        }
 
         if (this.tickCount % 20 == 0 && this.isInWater()) {
             if (!this.isAerial()) {
