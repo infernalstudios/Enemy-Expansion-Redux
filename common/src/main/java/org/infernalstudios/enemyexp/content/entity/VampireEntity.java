@@ -78,7 +78,7 @@ public class VampireEntity extends Monster implements GeoEntity {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 30.0D)
                 .add(Attributes.ATTACK_DAMAGE, 4.0D)
-                .add(Attributes.MOVEMENT_SPEED, 0.45D)
+                .add(Attributes.MOVEMENT_SPEED, 0.35D)
                 .add(Attributes.FLYING_SPEED, 0.7D)
                 .add(Attributes.FOLLOW_RANGE, 64.0D);
     }
