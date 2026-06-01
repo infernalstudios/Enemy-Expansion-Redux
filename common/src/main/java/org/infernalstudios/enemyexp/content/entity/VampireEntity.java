@@ -17,20 +17,16 @@ import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.control.FlyingMoveControl;
-import net.minecraft.world.entity.ai.control.MoveControl;
 import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
-import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
-import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
-import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.world.entity.monster.AbstractIllager;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import org.infernalstudios.enemyexp.Constants;
 import org.infernalstudios.enemyexp.content.EEAnimations;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlAttackGoal;
 import org.infernalstudios.enemyexp.content.entity.goal.HardLookAtTargetGoal;
@@ -55,23 +51,14 @@ public class VampireEntity extends Monster implements GeoEntity {
     private static final EntityDataAccessor<Boolean> SITING = SynchedEntityData.defineId(VampireEntity.class, EntityDataSerializers.BOOLEAN);
     private static final UUID FLYING_SPEED_MODIFIER = UUID.fromString("bac26f76-fa57-4c72-b0e2-a26c8de7e2a4");
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
-    private final PathNavigation groundNavigation;
-    private final PathNavigation flyingNavigation;
-    private final MoveControl groundMoveControl;
-    private final MoveControl flyingMoveControl;
     private int ticksSinceInteraction = 0;
     private int alertTicks = 0;
     private boolean spawningBiter = false;
 
     public VampireEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
-        this.groundNavigation = new GroundPathNavigation(this, level);
-        this.flyingNavigation = new FlyingPathNavigation(this, level);
-        this.groundMoveControl = new MoveControl(this);
-        this.flyingMoveControl = new FlyingMoveControl(this, 20, true);
-
-        this.navigation = this.groundNavigation;
-        this.moveControl = this.groundMoveControl;
+        this.navigation = new VampirePathNavigation(this, level);
+        this.moveControl = new VampireMoveControl(this);
     }
 
     public static AttributeSupplier.@NotNull Builder createAttributes() {
@@ -95,7 +82,7 @@ public class VampireEntity extends Monster implements GeoEntity {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new AvoidEntityGoal<>(this, IronGolem.class, 8.0F, 1.2D, 1.5D));
-        this.goalSelector.addGoal(2, new ControlAttackGoal(this, 1.0D, false, () -> this.alertTicks <= 0){
+        this.goalSelector.addGoal(2, new ControlAttackGoal(this, 1.0D, false, () -> this.alertTicks <= 0) {
             @Override
             protected double getAttackReachSqr(@NotNull LivingEntity attackTarget) {
                 // 50% reach
@@ -289,38 +276,6 @@ public class VampireEntity extends Monster implements GeoEntity {
         }
     }
 
-    public boolean isAwake() {
-        return this.entityData.get(AWAKE);
-    }
-
-    public void setAwake(boolean awake) {
-        this.entityData.set(AWAKE, awake);
-    }
-
-    public boolean isAerial() {
-        return this.entityData.get(AERIAL);
-    }
-
-    public void setAerial(boolean aerial) {
-        this.entityData.set(AERIAL, aerial);
-    }
-
-    public boolean isAngry() {
-        return this.entityData.get(ANGRY);
-    }
-
-    public void setAngry(boolean angry) {
-        this.entityData.set(ANGRY, angry);
-    }
-
-    public boolean isSitting() {
-        return this.entityData.get(SITING);
-    }
-
-    public void setSitting(boolean sitting) {
-        this.entityData.set(SITING, sitting);
-    }
-
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar data) {
         data.add(new AnimationController<>(this, "movement", 2, this::movementPredicate));
@@ -378,18 +333,9 @@ public class VampireEntity extends Monster implements GeoEntity {
     public void onSyncedDataUpdated(@NotNull EntityDataAccessor<?> key) {
         super.onSyncedDataUpdated(key);
         if (AERIAL.equals(key)) {
-            boolean aerial = isAerial();
-            this.setNoGravity(aerial);
-
-            if (!this.level().isClientSide) {
-                if (aerial) {
-                    this.navigation = this.flyingNavigation;
-                    this.moveControl = this.flyingMoveControl;
-                } else {
-                    this.navigation = this.groundNavigation;
-                    this.moveControl = this.groundMoveControl;
-                }
-            }
+            this.setNoGravity(isAerial());
+            if (getNavigation() instanceof  VampirePathNavigation vampirePathNavigation) vampirePathNavigation.switchMode();
+            if (getMoveControl() instanceof VampireMoveControl vampireMoveControl && isAerial()) vampireMoveControl.switchMode();
         }
     }
 
@@ -435,6 +381,43 @@ public class VampireEntity extends Monster implements GeoEntity {
     @Override
     protected @NotNull SoundEvent getDeathSound() {
         return SoundEvents.PHANTOM_DEATH;
+    }
+
+    public boolean isAwake() {
+        return this.entityData.get(AWAKE);
+    }
+
+    public void setAwake(boolean awake) {
+        this.entityData.set(AWAKE, awake);
+    }
+
+    public boolean isAerial() {
+        return this.entityData.get(AERIAL);
+    }
+
+    public void setAerial(boolean aerial) {
+        if (this.isAerial() != aerial) {
+            this.entityData.set(AERIAL, aerial);
+            this.getNavigation().stop();
+            this.getMoveControl().setWantedPosition(this.getX(), this.getY(), this.getZ(), 0);
+        }
+    }
+
+
+    public boolean isAngry() {
+        return this.entityData.get(ANGRY);
+    }
+
+    public void setAngry(boolean angry) {
+        this.entityData.set(ANGRY, angry);
+    }
+
+    public boolean isSitting() {
+        return this.entityData.get(SITING);
+    }
+
+    public void setSitting(boolean sitting) {
+        this.entityData.set(SITING, sitting);
     }
 
     @Override
