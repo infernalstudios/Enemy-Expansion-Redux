@@ -6,9 +6,9 @@
 				"identifier": "geometry.goblin",
 				"texture_width": 64,
 				"texture_height": 64,
-				"visible_bounds_width": 3,
-				"visible_bounds_height": 2.5,
-				"visible_bounds_offset": [0, 0.75, 0]
+				"visible_bounds_width": 2,
+				"visible_bounds_height": 3.5,
+				"visible_bounds_offset": [0, 1.25, 0]
 			},
 			"bones": [
 				{
@@ -90,9 +90,9 @@
 				{
 					"name": "armorleftarm",
 					"parent": "leftarm",
-					"pivot": [3, 16.5, 0],
+					"pivot": [3, 14.5, 0],
 					"cubes": [
-						{"origin": [3, 7, -1.5], "size": [3, 9, 3], "inflate": 0.1, "uv": [52, 52]}
+						{"origin": [3, 7, -1.5], "size": [3, 9, 3], "inflate": 0.4, "uv": [52, 52]}
 					]
 				},
 				{
@@ -114,9 +114,9 @@
 				{
 					"name": "armorrightarm",
 					"parent": "rightarm",
-					"pivot": [-3, 16.5, 0],
+					"pivot": [-3, 14.5, 0],
 					"cubes": [
-						{"origin": [-6, 7, -1.5], "size": [3, 9, 3], "inflate": 0.1, "uv": [52, 52], "mirror": true}
+						{"origin": [-6, 7, -1.5], "size": [3, 9, 3], "inflate": 0.4, "uv": [52, 52], "mirror": true}
 					]
 				},
 				{
@@ -127,7 +127,7 @@
 				{
 					"name": "armorbody",
 					"parent": "torso",
-					"pivot": [0, 7, 0],
+					"pivot": [0, 16, 0],
 					"cubes": [
 						{"origin": [-3, 8, -2], "size": [6, 8, 4], "inflate": 0.1, "uv": [44, 52]}
 					]
@@ -135,7 +135,7 @@
 				{
 					"name": "armorpelvis",
 					"parent": "armorbody",
-					"pivot": [0, 7, 0],
+					"pivot": [0, 16, 0],
 					"cubes": [
 						{"origin": [-3, 8, -2], "size": [6, 8, 4], "inflate": 0.1, "uv": [44, 52]}
 					]

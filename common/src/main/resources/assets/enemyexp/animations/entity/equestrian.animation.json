@@ -1640,6 +1640,19 @@
 							"lerp_mode": "catmullrom"
 						}
 					}
+				},
+				"rightitem": {
+					"rotation": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"1.25": {
+							"vector": [0, 0, 0]
+						},
+						"1.5": {
+							"vector": [90, 0, 0]
+						}
+					}
 				}
 			}
 		},
@@ -2077,6 +2090,11 @@
 							},
 							"lerp_mode": "catmullrom"
 						}
+					}
+				},
+				"rightitem": {
+					"rotation": {
+						"vector": [90, 0, 0]
 					}
 				}
 			}
