@@ -83,8 +83,8 @@
 				{
 					"name": "armorleftarm",
 					"parent": "zombiearmleft",
-					"pivot": [3.4195, 31.1727, 2.7382],
-					"rotation": [-48.3973, -6.3066, 20.5563],
+					"pivot": [4.4195, 31.1727, 2.7382],
+					"rotation": [-30, 0, 5],
 					"cubes": [
 						{"origin": [3.06063, 20.14418, 0.1253], "size": [3, 13, 4], "uv": [50, 44]}
 					]
@@ -92,7 +92,7 @@
 				{
 					"name": "leftitem",
 					"parent": "zombiearmleft",
-					"pivot": [3.41953, 25.17268, -4.26185],
+					"pivot": [4.41953, 27.67268, -3.76185],
 					"rotation": [-48.3973, -6.3066, 20.5563]
 				},
 				{
@@ -107,8 +107,8 @@
 				{
 					"name": "armorrightarm",
 					"parent": "zombiearmright",
-					"pivot": [-3.4195, 31.1727, 2.7382],
-					"rotation": [-48.3973, 6.3066, -20.5563],
+					"pivot": [-4.4195, 31.1727, 2.7382],
+					"rotation": [-30, 0, -5],
 					"cubes": [
 						{"origin": [-6.0828, 20.2004, 0.44899], "size": [3, 13, 4], "uv": [50, 44], "mirror": true}
 					]
@@ -116,8 +116,8 @@
 				{
 					"name": "rightitem",
 					"parent": "zombiearmright",
-					"pivot": [-3.41953, 25.17268, -4.26185],
-					"rotation": [-48.3973, 6.3066, -20.5563]
+					"pivot": [-4.21953, 27.47268, -3.76185],
+					"rotation": [-25.8973, 6.3066, -20.5563]
 				},
 				{
 					"name": "zombielegleft",

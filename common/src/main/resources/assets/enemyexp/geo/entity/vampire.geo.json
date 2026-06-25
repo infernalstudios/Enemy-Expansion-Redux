@@ -127,7 +127,7 @@
 				{
 					"name": "leftitem",
 					"parent": "leftarm",
-					"pivot": [5, 14, 0]
+					"pivot": [5.5, 15, -2]
 				},
 				{
 					"name": "armorleftarm",
@@ -150,7 +150,7 @@
 				{
 					"name": "rightitem",
 					"parent": "rightarm",
-					"pivot": [-5, 14, 0]
+					"pivot": [-5.5, 15, -2]
 				},
 				{
 					"name": "armorrightarm",

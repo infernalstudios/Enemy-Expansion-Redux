@@ -51,10 +51,10 @@
 				{
 					"name": "armorhead",
 					"parent": "head",
-					"pivot": [0, 8, -2.5],
-					"rotation": [-60, 0, 0],
+					"pivot": [0, 6.8, -1.9],
+					"rotation": [-30, 0, 0],
 					"cubes": [
-						{"origin": [-4, 8, -4.4], "size": [8, 8, 8], "inflate": 0.6, "pivot": [0, 8, -2.5], "rotation": [-60, 0, 0], "uv": [32, 16]}
+						{"origin": [-4, 6.8, -3.8], "size": [8, 8, 8], "inflate": 0.6, "pivot": [0, 6.8, -1.9], "rotation": [-60, 0, 0], "uv": [32, 16]}
 					]
 				},
 				{
@@ -83,7 +83,7 @@
 				{
 					"name": "leftitem",
 					"parent": "leftarm",
-					"pivot": [5, -3, 0.33975]
+					"pivot": [6, -2, -1.66025]
 				},
 				{
 					"name": "rightarm",
@@ -106,7 +106,7 @@
 				{
 					"name": "rightitem",
 					"parent": "rightarm",
-					"pivot": [-5, -3, 0.33975]
+					"pivot": [-6, -2, -1.66025]
 				}
 			]
 		}

@@ -53,7 +53,7 @@
 					"parent": "armorbody",
 					"pivot": [0, 28, 0],
 					"cubes": [
-						{"origin": [-4, 14, -2], "size": [8, 14, 4], "inflate": 0.05, "uv": [16, 46]}
+						{"origin": [-4, 14, -2], "size": [8, 14, 4], "inflate": 0.1, "uv": [16, 46]}
 					]
 				},
 				{
@@ -68,7 +68,7 @@
 				{
 					"name": "armorleftarm",
 					"parent": "leftarm",
-					"pivot": [4, 26, 0],
+					"pivot": [5, 26, 0],
 					"cubes": [
 						{"origin": [4, 13, -2], "size": [4, 15, 4], "inflate": 0.2, "uv": [40, 45], "mirror": true}
 					]
@@ -76,7 +76,8 @@
 				{
 					"name": "leftitem",
 					"parent": "leftarm",
-					"pivot": [6, 15, 0]
+					"pivot": [6, 15, -2],
+					"rotation": [0, 0, 179.99]
 				},
 				{
 					"name": "rightarm",
@@ -90,7 +91,7 @@
 				{
 					"name": "armorrightarm",
 					"parent": "rightarm",
-					"pivot": [-4, 26, 0],
+					"pivot": [-5, 26, 0],
 					"cubes": [
 						{"origin": [-8, 13, -2], "size": [4, 15, 4], "inflate": 0.2, "uv": [40, 45]}
 					]
@@ -98,7 +99,7 @@
 				{
 					"name": "rightitem",
 					"parent": "rightarm",
-					"pivot": [-6, 15, 0]
+					"pivot": [-6, 15, -2]
 				},
 				{
 					"name": "leftleg",
