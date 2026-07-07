@@ -3,10 +3,7 @@ package org.infernalstudios.enemyexp.content.entity;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.EntityDimensions;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MobType;
-import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Zombie;
@@ -23,6 +20,9 @@ import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 public class FrigidEntity extends Zombie implements GeoEntity {
+    private static final int MAX_FREEZE_TIME_TICKS = 300;
+    private static final int FREEZE_TIME_TICKS = 50;
+
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     public FrigidEntity(EntityType<? extends Zombie> entityType, Level level) {
@@ -33,6 +33,18 @@ public class FrigidEntity extends Zombie implements GeoEntity {
         return Zombie.createAttributes()
                 .add(Attributes.ATTACK_DAMAGE, 3.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.3D);
+    }
+
+    @Override
+    public boolean doHurtTarget(@NotNull Entity entity) {
+        boolean flag = super.doHurtTarget(entity);
+        if (flag && entity instanceof LivingEntity livingEntity) {
+            float f = this.level().getCurrentDifficultyAt(this.blockPosition()).getEffectiveDifficulty();
+            if (!livingEntity.canFreeze() || livingEntity.getTicksFrozen() >= MAX_FREEZE_TIME_TICKS) return flag;
+            livingEntity.setTicksFrozen((int) Math.min(livingEntity.getTicksFrozen() + (FREEZE_TIME_TICKS * f), MAX_FREEZE_TIME_TICKS));
+        }
+
+        return flag;
     }
 
     @Override

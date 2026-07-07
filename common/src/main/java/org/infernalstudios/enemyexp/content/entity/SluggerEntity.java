@@ -63,7 +63,7 @@ public class SluggerEntity extends Zombie implements GeoEntity, IChargeable {
     public static AttributeSupplier.@NotNull Builder createAttributes() {
         return Zombie.createAttributes()
                 .add(Attributes.MOVEMENT_SPEED, 0.2D).add(Attributes.FOLLOW_RANGE, 32.0D)
-                .add(Attributes.ATTACK_DAMAGE, 4.0D).add(Attributes.MAX_HEALTH, 8.0D)
+                .add(Attributes.ATTACK_DAMAGE, 8.0D).add(Attributes.MAX_HEALTH, 8.0D)
                 .add(Attributes.ARMOR, 16.0D).add(Attributes.KNOCKBACK_RESISTANCE, 3.0D)
                 .add(Attributes.ATTACK_KNOCKBACK, 0.3D);
     }
@@ -151,8 +151,10 @@ public class SluggerEntity extends Zombie implements GeoEntity, IChargeable {
     @Override
     public boolean hurt(@NotNull DamageSource source, float amount) {
         boolean result = super.hurt(source, amount);
+        if (getState() == STATE_SITTING) return result;
+        if (getState() == STATE_CHARGING) return result;
 
-        if (source.getEntity() instanceof LivingEntity livingEntity && !isCharging() && !this.level().isClientSide && getState() != STATE_SITTING) {
+        if (source.getEntity() instanceof LivingEntity livingEntity && !isCharging() && !this.level().isClientSide) {
             Vec3 toEntity = livingEntity.position().subtract(this.position()).normalize();
             if (livingEntity instanceof Player player && player.isCreative()) return result;
             this.entityData.set(CHARGE_DIR_X, (float) toEntity.x);

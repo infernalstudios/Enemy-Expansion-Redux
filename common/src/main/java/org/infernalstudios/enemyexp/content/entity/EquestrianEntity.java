@@ -100,7 +100,9 @@ public class EquestrianEntity extends Zombie implements GeoEntity, IChargeable {
     }
 
     public static AttributeSupplier.@NotNull Builder createAttributes() {
-        return Zombie.createAttributes().add(Attributes.ATTACK_DAMAGE, 3.0D)
+        return Zombie.createAttributes()
+                .add(Attributes.MAX_HEALTH, 60.0D)
+                .add(Attributes.ATTACK_DAMAGE, 8.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.3D)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.1D);
     }
@@ -275,7 +277,7 @@ public class EquestrianEntity extends Zombie implements GeoEntity, IChargeable {
         private final EquestrianEntity equestrian;
 
         public EquestrianRangedKitingGoal(EquestrianEntity mob) {
-            super(mob, 0.9D);
+            super(mob, 1.1D);
             this.equestrian = mob;
         }
 

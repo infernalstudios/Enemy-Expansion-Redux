@@ -26,7 +26,6 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import org.infernalstudios.enemyexp.Constants;
 import org.infernalstudios.enemyexp.content.EEAnimations;
 import org.infernalstudios.enemyexp.content.entity.goal.ControlAttackGoal;
 import org.infernalstudios.enemyexp.content.entity.goal.HardLookAtTargetGoal;
@@ -50,6 +49,7 @@ public class VampireEntity extends Monster implements GeoEntity {
     private static final EntityDataAccessor<Boolean> ANGRY = SynchedEntityData.defineId(VampireEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> SITING = SynchedEntityData.defineId(VampireEntity.class, EntityDataSerializers.BOOLEAN);
     private static final UUID FLYING_SPEED_MODIFIER = UUID.fromString("bac26f76-fa57-4c72-b0e2-a26c8de7e2a4");
+    private static final float BITER_GROUND_SPAWN_PROB = 0.1F;
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private int ticksSinceInteraction = 0;
     private int alertTicks = 0;
@@ -63,8 +63,8 @@ public class VampireEntity extends Monster implements GeoEntity {
 
     public static AttributeSupplier.@NotNull Builder createAttributes() {
         return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 30.0D)
-                .add(Attributes.ATTACK_DAMAGE, 4.0D)
+                .add(Attributes.MAX_HEALTH, 60.0D)
+                .add(Attributes.ATTACK_DAMAGE, 8.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.35D)
                 .add(Attributes.FLYING_SPEED, 0.7D)
                 .add(Attributes.FOLLOW_RANGE, 64.0D);
@@ -238,14 +238,16 @@ public class VampireEntity extends Monster implements GeoEntity {
     @Override
     public void die(@NotNull DamageSource cause) {
         super.die(cause);
-        if (!this.level().isClientSide) {
-            if (!isAerial() && this.random.nextBoolean()) {
+        if (this.level().isClientSide) return;
+        if (!isAerial()) {
+            if (random.nextFloat() < BITER_GROUND_SPAWN_PROB) {
                 this.spawningBiter = true;
                 triggerAnim("death", "biter_spawn");
-            } else {
-                if (isAerial()) triggerAnim("death", "die_air");
-                else triggerAnim("death", "die_ground");
+                return;
             }
+            triggerAnim("death", "die_ground");
+        } else {
+            triggerAnim("death", "die_air");
         }
     }
 
