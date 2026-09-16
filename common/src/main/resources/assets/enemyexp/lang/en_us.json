@@ -24,5 +24,11 @@
   "entity.enemyexp.biter": "Biter",
   "entity.enemyexp.goblin_thief": "Goblin Thief",
   "effect.enemyexp.bitten": "Bitten",
-  "entity.enemyexp.equestrian": "Equestrian"
+  "entity.enemyexp.equestrian": "Equestrian",
+  "entity.enemyexp.starved": "Starved",
+  "item.enemyexp.starved_spawn_egg": "Starved Spawn Egg",
+  "container.enemyexp.starved": "Starved",
+  "advancements.starved_steal.title": "Mouthful of Treasures",
+  "advancements.starved_steal.descr": "Steal the item from a Starved's mouth",
+  "subtitles.enemyexp.starved.chomp": "Starved chomps"
 }

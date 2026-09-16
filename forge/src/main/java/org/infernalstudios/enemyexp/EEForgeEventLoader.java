@@ -10,6 +10,7 @@ import net.minecraftforge.registries.RegisterEvent;
 import org.infernalstudios.enemyexp.core.RegisterFunction;
 import org.infernalstudios.enemyexp.setup.EECreativeTabs;
 import org.infernalstudios.enemyexp.setup.EEItems;
+import org.infernalstudios.enemyexp.setup.EEMenus;
 import org.infernalstudios.enemyexp.setup.EEMobEffects;
 import org.infernalstudios.enemyexp.setup.EEntities;
 
@@ -32,6 +33,8 @@ public class EEForgeEventLoader {
                 register(event, EEItems::register);
             else if (event.getRegistryKey() == Registries.MOB_EFFECT)
                 register(event, EEMobEffects::register);
+            else if (event.getRegistryKey() == Registries.MENU)
+                register(event, EEMenus::register);
 
         }
 

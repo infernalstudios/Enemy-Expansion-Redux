@@ -1,0 +1,22 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:sand"
+    },
+    "title": {
+      "translate": "advancements.starved_steal.title"
+    },
+    "description": {
+      "translate": "advancements.starved_steal.descr"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "starved_steal_0": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

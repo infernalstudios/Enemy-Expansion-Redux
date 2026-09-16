@@ -31,6 +31,7 @@ public final class EEntities {
     public static final DeferredObject<EntityType<BiterEntity>> BITER = entity(BiterEntity::new, "biter", MobCategory.MONSTER, 0.4F, 0.8F);
     public static final DeferredObject<EntityType<EquestrianEntity>> EQUESTRIAN = entity(EquestrianEntity::new, "equestrian", MobCategory.MONSTER, 1.4F, 2.5F);
     public static final DeferredObject<EntityType<GoblinThiefEntity>> GOBLIN_THIEF = entity(GoblinThiefEntity::new, "goblin_thief", MobCategory.MONSTER, 0.6F, 1.4F);
+    public static final DeferredObject<EntityType<StarvedEntity>> STARVED = entity(StarvedEntity::new, "starved", MobCategory.MONSTER, 2.2F, 0.95F);
 
     private EEntities() {
     }
@@ -51,10 +52,22 @@ public final class EEntities {
         registerMobSpawn(EEntities.BITER.get());
         registerMobSpawn(EEntities.EQUESTRIAN.get());
         registerMobSpawn(EEntities.GOBLIN_THIEF.get());
+        registerMobSpawn(EEntities.STARVED.get(), EEntities::checkStarvedSpawnRules);
     }
 
     public static void registerMobSpawn(EntityType<?> type) {
         SpawnPlacementsAccessor.callRegister(type, SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, EEntities::checkHostileRules);
+    }
+
+    public static void registerMobSpawn(EntityType<?> type, SpawnPlacements.SpawnPredicate<?> predicate) {
+        SpawnPlacementsAccessor.callRegister(type, SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, predicate);
+    }
+
+
+    public static boolean checkStarvedSpawnRules(EntityType<?> type, ServerLevelAccessor level, MobSpawnType spawnType, BlockPos pos, RandomSource random) {
+        return level.getDifficulty() != Difficulty.PEACEFUL
+                && level.canSeeSky(pos)
+                && Mob.checkMobSpawnRules((EntityType<? extends Mob>) type, level, spawnType, pos, random);
     }
 
     public static void registerAttributes(BiConsumer<EntityType<? extends LivingEntity>, AttributeSupplier> consumer) {
@@ -67,6 +80,7 @@ public final class EEntities {
         consumer.accept(BITER.get(), BiterEntity.createAttributes().build());
         consumer.accept(EQUESTRIAN.get(), EquestrianEntity.createAttributes().build());
         consumer.accept(GOBLIN_THIEF.get(), GoblinThiefEntity.createAttributes().build());
+        consumer.accept(STARVED.get(), StarvedEntity.createAttributes().build());
     }
 
     public static Map<String, DeferredObject<EntityType<? extends Entity>>> getEntityTypes() {

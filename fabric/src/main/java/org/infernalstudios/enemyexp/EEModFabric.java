@@ -13,6 +13,7 @@ import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.CreativeModeTabs;
 import org.infernalstudios.enemyexp.setup.EECreativeTabs;
 import org.infernalstudios.enemyexp.setup.EEItems;
+import org.infernalstudios.enemyexp.setup.EEMenus;
 import org.infernalstudios.enemyexp.setup.EEMobEffects;
 import org.infernalstudios.enemyexp.setup.EEntities;
 
@@ -25,6 +26,7 @@ public class EEModFabric implements ModInitializer {
         EEntities.register(Registry::register);
         EEntities.registerAttributes(FabricDefaultAttributeRegistry::register);
         EEItems.register(Registry::register);
+        EEMenus.register(Registry::register);
         EEMobEffects.register(Registry::register);
 
         ItemGroupEvents.MODIFY_ENTRIES_ALL.register((itemGroup, entries) -> {
@@ -64,5 +66,8 @@ public class EEModFabric implements ModInitializer {
 
         BiomeModifications.addSpawn(BiomeSelectors.tag(BiomeTags.IS_OVERWORLD),
                 MobCategory.MONSTER, EEntities.SLUGGER.get(), 50, 1, 1);
+
+        BiomeModifications.addSpawn(BiomeSelectors.tag(ConventionalBiomeTags.DESERT),
+                MobCategory.MONSTER, EEntities.STARVED.get(), 50, 1, 1);
     }
 }

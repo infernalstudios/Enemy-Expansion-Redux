@@ -1,0 +1,11 @@
+{
+  "starved.chomp": {
+    "subtitle": "subtitles.enemyexp.starved.chomp",
+    "sounds": [
+      {
+        "name": "enemyexp:starved_chomp",
+        "stream": false
+      }
+    ]
+  }
+}

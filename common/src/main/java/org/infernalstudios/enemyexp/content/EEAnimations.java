@@ -61,6 +61,11 @@ public final class EEAnimations {
     public static final RawAnimation BITER_WINGS_FLAPPING = RawAnimation.begin().thenLoop("wings_flapping");
     public static final RawAnimation BITER_DIE = RawAnimation.begin().then("die", Animation.LoopType.PLAY_ONCE);
 
+    // Starved
+    public static final RawAnimation STARVED_OPEN = RawAnimation.begin().thenPlayAndHold("open");
+    public static final RawAnimation STARVED_CLOSE = RawAnimation.begin().then("close", Animation.LoopType.PLAY_ONCE);
+    public static final RawAnimation STARVED_OPEN_CLOSE = RawAnimation.begin().then("openclose", Animation.LoopType.PLAY_ONCE);
+
     private EEAnimations() {
     }
 }

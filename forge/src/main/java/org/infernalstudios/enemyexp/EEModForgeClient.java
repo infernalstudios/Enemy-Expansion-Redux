@@ -1,6 +1,9 @@
 package org.infernalstudios.enemyexp;
 
+import org.infernalstudios.enemyexp.client.gui.StarvedGUIScreen;
+import org.infernalstudios.enemyexp.setup.EEMenus;
 import org.infernalstudios.enemyexp.setup.client.EERenderers;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.world.entity.Entity;
@@ -13,5 +16,6 @@ public class EEModForgeClient {
         EERenderers.getRenderers().forEach((entity, renderer) ->
                 EntityRenderers.register(entity.get(), (EntityRendererProvider<Entity>) renderer)
         );
+        MenuScreens.register(EEMenus.STARVED_GUI.get(), StarvedGUIScreen::new);
     }
 }

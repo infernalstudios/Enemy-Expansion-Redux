@@ -13,7 +13,8 @@ public final class EELootTableProvider {
 
     public static LootTableProvider create(PackOutput output) {
         return new LootTableProvider(output, Set.of(),
-                List.of(new LootTableProvider.SubProviderEntry(EEntityLootTables::new, LootContextParamSets.ENTITY)
+                List.of(new LootTableProvider.SubProviderEntry(EEntityLootTables::new, LootContextParamSets.ENTITY),
+                        new LootTableProvider.SubProviderEntry(StarvedTreasureLootTables::new, LootContextParamSets.EMPTY)
 
                 ));
     }

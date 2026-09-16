@@ -40,6 +40,7 @@ public final class EERenderers {
         registerEntityRender(EEntities.BITER, BiterRenderer::new);
         registerEntityRender(EEntities.EQUESTRIAN, EquestrianRenderer::new);
         registerEntityRender(EEntities.GOBLIN_THIEF, GoblinThiefRenderer::new);
+        registerEntityRender(EEntities.STARVED, StarvedRenderer::new);
     }
 
     public static Map<DeferredObject<EntityType<? extends Entity>>, EntityRendererProvider<?>> getRenderers() {
