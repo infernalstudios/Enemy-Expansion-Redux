@@ -41,6 +41,7 @@ public final class EERenderers {
         registerEntityRender(EEntities.EQUESTRIAN, EquestrianRenderer::new);
         registerEntityRender(EEntities.GOBLIN_THIEF, GoblinThiefRenderer::new);
         registerEntityRender(EEntities.STARVED, StarvedRenderer::new);
+        registerEntityRender(EEntities.DIREWOLF, DirewolfRenderer::new);
     }
 
     public static Map<DeferredObject<EntityType<? extends Entity>>, EntityRendererProvider<?>> getRenderers() {

@@ -66,6 +66,10 @@ public final class EEAnimations {
     public static final RawAnimation STARVED_CLOSE = RawAnimation.begin().then("close", Animation.LoopType.PLAY_ONCE);
     public static final RawAnimation STARVED_OPEN_CLOSE = RawAnimation.begin().then("openclose", Animation.LoopType.PLAY_ONCE);
 
+    // Direwolf
+    public static final RawAnimation DIREWOLF_RUN = RawAnimation.begin().thenLoop("run");
+    public static final RawAnimation DIREWOLF_LEAP = RawAnimation.begin().then("leap", Animation.LoopType.PLAY_ONCE);
+
     private EEAnimations() {
     }
 }

@@ -11,6 +11,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.tags.BiomeTags;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.level.biome.Biomes;
 import org.infernalstudios.enemyexp.setup.EECreativeTabs;
 import org.infernalstudios.enemyexp.setup.EEItems;
 import org.infernalstudios.enemyexp.setup.EEMenus;
@@ -69,5 +70,8 @@ public class EEModFabric implements ModInitializer {
 
         BiomeModifications.addSpawn(BiomeSelectors.tag(ConventionalBiomeTags.DESERT),
                 MobCategory.MONSTER, EEntities.STARVED.get(), 50, 1, 1);
+
+        BiomeModifications.addSpawn(BiomeSelectors.includeByKey(Biomes.PLAINS),
+                MobCategory.MONSTER, EEntities.DIREWOLF.get(), 100, 2, 4);
     }
 }

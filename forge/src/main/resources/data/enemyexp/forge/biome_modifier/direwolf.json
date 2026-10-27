@@ -1,0 +1,10 @@
+{
+  "type": "forge:add_spawns",
+  "biomes": "minecraft:plains",
+  "spawners": {
+    "type": "enemyexp:direwolf",
+    "weight": 100,
+    "minCount": 2,
+    "maxCount": 4
+  }
+}

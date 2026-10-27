@@ -31,6 +31,7 @@ public final class EEItems {
     public static final DeferredObject<Item> EQUESTRIAN_SPAWN_EGG = spawnEgg("equestrian_spawn_egg", EEntities.EQUESTRIAN.get(), 0xbedac3, 0xa8cab6);
     public static final DeferredObject<Item> GOBLIN_THIEF_SPAWN_EGG = spawnEgg("goblin_thief_spawn_egg", EEntities.GOBLIN_THIEF.get(), 0x2d5e69, 0x364151);
     public static final DeferredObject<Item> STARVED_SPAWN_EGG = spawnEgg("starved_spawn_egg", EEntities.STARVED.get(), 0x963E22, 0xC3D7A9);
+    public static final DeferredObject<Item> DIREWOLF_SPAWN_EGG = spawnEgg("direwolf_spawn_egg", EEntities.DIREWOLF.get(), 0x6E686B, 0x4B4545);
     public static final DeferredObject<Item> VAMPEAR = item("vampear", () -> new VampearItem(new Item.Properties()), true, true);
     public static final DeferredObject<Item> MEATHEAD = armor("meathead", MeatheadArmor::new);
     public static final DeferredObject<Item> HORSEHEAD = armor("horsehead", HorseHeadArmor::new);
